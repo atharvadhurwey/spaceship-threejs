@@ -1,0 +1,11 @@
+reference.txt
+.DS_Store
+node_modules
+package-lock.json
+dist
+.vercel
+
+// nothing to look here
+move this
+
+todo.txt
