@@ -21,16 +21,15 @@ export default class Renderer
             antialias: true
         })
         this.instance.toneMapping = THREE.CineonToneMapping
-        this.instance.toneMappingExposure = 1.75
+        // this.instance.toneMappingExposure = 1.75
 
         this.instance.shadowMap.enabled = true;
         this.instance.shadowMap.type = THREE.VSMShadowMap;
 
-        this.instance.setClearColor('#211d20')
+        // this.instance.setClearColor('#211d20')
         this.instance.setSize(this.sizes.width, this.sizes.height)
         this.instance.setPixelRatio(this.sizes.pixelRatio)
 
-        // this.scene.fog = new THREE.Fog(0x000000, 0, 600);
         this.instance.setClearColor(0xffffff);
     }
 

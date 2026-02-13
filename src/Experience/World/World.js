@@ -9,7 +9,6 @@ export default class World
     {
         this.experience = new Experience()
         this.scene = this.experience.scene
-        this.score = this.experience.score
         this.movement = this.experience.movement
         this.resources = this.experience.resources
 
@@ -27,7 +26,7 @@ export default class World
 
     update()
     {
-        if (this.gameActive && this.ship && this.map && this.score && this.environment)
+        if (this.gameActive && this.ship && this.map && this.environment)
         {
             this.ship.update()
             this.map.update(this.movement.velocity, this.movement.forwardSpeed)
@@ -39,21 +38,16 @@ export default class World
                 this.score.gameOver()
                 this.handleCrash()
             }
-
-            this.score.update(this.movement.forwardSpeed)
         }
     }
 
     handleCrash()
     {
         this.gameActive = false;
-        this.score.gameOver();
-
         setTimeout(() =>
         {
             this.ship.reset();
             this.map.reset();
-            this.score.reset();
 
             this.gameActive = true;
         }, 500);

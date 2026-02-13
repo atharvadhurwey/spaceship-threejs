@@ -3,6 +3,7 @@ import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUti
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast, BVHHelper } from 'three-mesh-bvh';
 import Experience from '../Experience';
 import TubeTrail from '../Utils/TubeTrail';
+import WaterTrail from '../Utils/WaterTrail';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -22,6 +23,9 @@ export default class Ship
 
         this.trails = [];
         this.trailOffsets = [];
+
+        this.waterTrails
+        this.waterTrailOffsets = [];
 
         this.model = this.resources.spaceship1.scene;
 
@@ -65,6 +69,15 @@ export default class Ship
                     child.visible = false;
                 }
             }
+
+            if (child.name.includes('wing'))
+            {
+                this.waterTrailOffsets.push(child.position.clone());
+                if (child.isMesh)
+                {
+                    child.visible = false;
+                }
+            }
         });
 
         this.mesh.position.y += 2;
@@ -83,7 +96,7 @@ export default class Ship
         {
             const engineTrail = new TubeTrail(
                 this.scene,
-                this.mesh,    
+                this.mesh,
                 offset,       // The specific offset for this engine
                 50,           // Length (segments)
                 0.19,          // Radius (thickness)
@@ -92,14 +105,25 @@ export default class Ship
 
             this.trails.push(engineTrail);
         }
+
+        this.waterTrail = new WaterTrail(
+            this.scene,
+            this.mesh,
+            this.waterTrailOffsets[0],
+            this.waterTrailOffsets[1],
+            100,           // Length (segments)
+            0.19,          // Radius (thickness)
+            0xffffff      // Color
+        );
     }
 
     update()
     {
+        const deltaTime = this.experience.time.delta;
         const velocity = this.movement.velocity;
         const forwardSpeed = this.movement.forwardSpeed || 0;
 
-        this.mesh.rotation.z = -velocity * 1.8;
+        this.mesh.rotation.z = -velocity * 0.9;
 
         if (this.debug && this.helpers.length > 0)
         {
@@ -108,13 +132,21 @@ export default class Ship
 
         if (this.trails.length > 0)
         {
-            const zShift = forwardSpeed
-            const xShift = velocity * 0.1
+            const zShift = forwardSpeed * deltaTime;
+            const xShift = velocity * 0.1 * deltaTime;
 
             for (const trail of this.trails)
             {
                 trail.update(zShift, xShift);
             }
+        }
+
+        if (this.waterTrail)
+        {
+            const zShift = forwardSpeed * 0.2 * deltaTime;
+            const xShift = velocity * 0.1 * deltaTime;
+
+            this.waterTrail.update(zShift, xShift);
         }
     }
 

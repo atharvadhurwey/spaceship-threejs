@@ -31,7 +31,6 @@ export default class Map
 
         this.chunkLength = 0;
         this.chunkWidth = 0;
-        this.chunkCount = 3;
 
         this.chunks = [];
         this._inverseMatrix = new THREE.Matrix4();
@@ -56,9 +55,12 @@ export default class Map
                     box.setFromObject(child);
                     const size = new THREE.Vector3();
                     box.getSize(size);
-                    ``
                     this.chunkLength = size.z;
                     this.chunkWidth = size.x;
+
+                    // child.userData.isCollider = true;
+
+                    child.material.color.set(0xE4E2DB);
 
                     child.geometry.computeBoundsTree();
                     // child.visible = false; // Hide the template collider mesh
@@ -70,13 +72,9 @@ export default class Map
         if (this.chunkWidth === 0) this.chunkWidth = 100;
 
         this.waterShaderParams = {
-            waveStrength: 0.1,
-            waveSpeed: 0.03,
-            waterColor: '#000000',
-            hoverRadius: 5.0,
-            hoverForce: 0.05,
-            shipDirX: 0,
-            shipDirZ: -1
+            waveStrength: 0.04,
+            waveSpeed: 0.1,
+            waterColor: '#005e76',
         };
 
         const customShader = Reflector.ReflectorShader;
@@ -90,85 +88,51 @@ export default class Map
         customShader.uniforms.uTime = { value: 0 };
         customShader.uniforms.uWaveStrength = { value: this.waterShaderParams.waveStrength };
         customShader.uniforms.uWaveSpeed = { value: this.waterShaderParams.waveSpeed };
-        customShader.uniforms.uHoverPos = { value: new THREE.Vector3(0, 0, 0) };
-        customShader.uniforms.uHoverRadius = { value: this.waterShaderParams.hoverRadius };
-        customShader.uniforms.uHoverForce = { value: this.waterShaderParams.hoverForce };
-        customShader.uniforms.uShipDirection = { value: new THREE.Vector2(this.waterShaderParams.shipDirX, this.waterShaderParams.shipDirZ) };
 
         this.floorReflector = new Reflector(
-            new THREE.PlaneGeometry(this.chunkWidth * 2, this.chunkLength * 2),
+            new THREE.CircleGeometry(this.chunkWidth * 4, 16),
             {
                 shader: customShader,
-                clipBias: 0.003,
-                textureWidth: window.innerWidth * window.devicePixelRatio / 4,
-                textureHeight: window.innerHeight * window.devicePixelRatio / 4,
+                clipBias: 0.1,
+                textureWidth: window.innerWidth * window.devicePixelRatio,
+                textureHeight: window.innerHeight * window.devicePixelRatio,
                 color: new THREE.Color(this.waterShaderParams.waterColor),
             }
         );
 
         this.floorReflector.rotation.x = - Math.PI * 0.5;
-        this.floorReflector.position.y = -0.01;
-
+        this.floorReflector.position.z = -this.chunkLength / 4;
+        this.floorReflector.position.y = 0.1;
         this.scene.add(this.floorReflector);
 
-        this.setupDebug();
-    }
-
-    setupDebug()
-    {
-        this.debugPane = this.debugFolder.addFolder({ title: 'Water Shader Controls' });
-
-        this.debugPane.addBinding(this.waterShaderParams, 'waveStrength', {
-            min: 0,
-            max: 0.5,
-            step: 0.001,
-            label: 'Wave Strength'
-        }).on('change', (ev) =>
+        if (this.debug.active)
         {
-            this.floorReflector.material.uniforms.uWaveStrength.value = ev.value;
-        });
+            const waterFolder = this.debugFolder.addFolder({ title: 'Water Shader Controls' });
 
-        this.debugPane.addBinding(this.waterShaderParams, 'waveSpeed', {
-            min: 0,
-            max: 1,
-            step: 0.001,
-            label: 'Wave Speed'
-        });
+            waterFolder.addBinding(this.waterShaderParams, 'waveStrength', {
+                min: 0,
+                max: 0.5,
+                step: 0.001,
+                label: 'Wave Strength'
+            }).on('change', (ev) =>
+            {
+                this.floorReflector.material.uniforms.uWaveStrength.value = ev.value;
+            });
 
-        this.debugPane.addBinding(this.waterShaderParams, 'waterColor', {
-            label: 'Water Color'
-        }).on('change', (ev) =>
-        {
-            this.floorReflector.material.uniforms.color.value.set(ev.value);
-        });
+            waterFolder.addBinding(this.waterShaderParams, 'waveSpeed', {
+                min: 0,
+                max: 1,
+                step: 0.001,
+                label: 'Wave Speed'
+            });
 
-        this.debugPane.addBinding(this.waterShaderParams, 'hoverRadius', {
-            min: 0, max: 20, step: 0.1, label: 'Ripple Radius'
-        }).on('change', (ev) =>
-        {
-            this.floorReflector.material.uniforms.uHoverRadius.value = ev.value;
-        });
-
-        this.debugPane.addBinding(this.waterShaderParams, 'hoverForce', {
-            min: 0, max: 0.5, step: 0.001, label: 'Ripple Force'
-        }).on('change', (ev) =>
-        {
-            this.floorReflector.material.uniforms.uHoverForce.value = ev.value;
-        });
-
-        this.debugPane.addBinding(this.waterShaderParams, 'shipDirX', {
-            min: -1, max: 1, step: 0.1, label: 'Dir X'
-        }).on('change', (ev) =>
-        {
-            this.floorReflector.material.uniforms.uShipDirection.value.x = ev.value;
-        });
-
-        this.debugPane.addBinding(this.waterShaderParams, 'shipDirZ', {
-            min: -1, max: 1, step: 0.1, label: 'Dir Z'
-        }).on('change', (ev) =>
-        {
-            this.floorReflector.material.uniforms.uShipDirection.value.y = ev.value;
-        });
+            waterFolder.addBinding(this.waterShaderParams, 'waterColor', {
+                label: 'Water Color'
+            }).on('change', (ev) =>
+            {
+                this.floorReflector.material.uniforms.color.value.set(ev.value);
+            });
+        }
     }
 
     createInfiniteMap()
@@ -204,14 +168,16 @@ export default class Map
 
     update(shipVelocity, forwardSpeed)
     {
-        this.floorReflector.material.uniforms.uTime.value += this.waterShaderParams.waveSpeed;
+        const deltaTime = this.experience.time.delta;
+
+        this.floorReflector.material.uniforms.uTime.value += this.waterShaderParams.waveSpeed * deltaTime;
 
         const boundaryX = (this.mapTotalWidth / 2);
 
         for (const chunk of this.chunks)
         {
-            chunk.position.z += forwardSpeed;
-            chunk.position.x -= shipVelocity;
+            chunk.position.z += forwardSpeed * deltaTime;
+            chunk.position.x -= shipVelocity * deltaTime;
 
             if (chunk.position.z > this.chunkLength) 
             {
@@ -222,7 +188,6 @@ export default class Map
             {
                 chunk.position.x += this.mapTotalWidth;
             }
-
             else if (chunk.position.x > boundaryX) 
             {
                 chunk.position.x -= this.mapTotalWidth;

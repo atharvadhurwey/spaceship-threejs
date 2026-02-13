@@ -11,9 +11,6 @@ export default class Resources extends EventEmitter
 
         this.sources = [
             { name: 'pillarScapeEMTexture', type: 'cubeTexture', path: ['textures/environmentMaps/pillarScape/px.jpg', 'textures/environmentMaps/pillarScape/nx.jpg', 'textures/environmentMaps/pillarScape/py.jpg', 'textures/environmentMaps/pillarScape/ny.jpg', 'textures/environmentMaps/pillarScape/pz.jpg', 'textures/environmentMaps/pillarScape/nz.jpg'] },
-            { name: 'grassColorTexture', type: 'texture', path: 'textures/dirt/color.jpg' },
-            { name: 'grassNormalTexture', type: 'texture', path: 'textures/dirt/normal.jpg' },
-            { name: 'foxModel', type: 'gltfModel', path: 'models/Fox/glTF/Fox.gltf' },
             { name: 'pillarScapeModel', type: 'gltfModel', path: 'models/Regions/pillarScape.glb' },
             { name: 'spaceship1', type: 'gltfModel', path: 'models/Spaceships/spaceship1.glb' },
             { name: 'cloud1', type: 'texture', path: 'textures/clouds/01.png' },
@@ -26,8 +23,8 @@ export default class Resources extends EventEmitter
             { name: 'cloud8', type: 'texture', path: 'textures/clouds/08.png' },
             { name: 'cloud9', type: 'texture', path: 'textures/clouds/09.png' },
             { name: 'cloud10', type: 'texture', path: 'textures/clouds/10.png' },
-            { name: 'dudvTexture', type: 'texture', path: 'textures/waterdudv.jpg' }
-
+            { name: 'dudvTexture', type: 'texture', path: 'textures/waterdudv.jpg' },
+            { name: 'pillarScapePlanetTexture', type: 'texture', path: 'textures/planet.png' }
         ]
 
         this.items = {}

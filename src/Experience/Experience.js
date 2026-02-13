@@ -8,7 +8,6 @@ import Renderer from './Renderer.js'
 import World from './World/World.js'
 import Resources from './Resources.js'
 import Movement from './Utils/Movement.js'
-import Score from './Utils/Score.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 
 let instance = null
@@ -24,10 +23,6 @@ export default class Experience
 
         this.canvas = _canvas
 
-        this.stats = new Stats()
-        this.stats.showPanel(0)
-        document.body.appendChild(this.stats.dom)
-
         // Setup
         this.debug = new Debug()
         this.sizes = new Sizes()
@@ -36,9 +31,29 @@ export default class Experience
         this.resources = new Resources()
         this.camera = new Camera()
         this.renderer = new Renderer()
-        this.score = new Score()
         this.movement = new Movement()
         this.world = new World()
+
+        if (this.debug.active) 
+        {
+            this.stats = new Stats()
+            this.stats.showPanel(0)
+            document.body.appendChild(this.stats.dom)
+        }
+
+        this.isActive = true // Track state
+
+        // Visibility Change Listener
+        document.addEventListener('visibilitychange', () =>
+        {
+            if (document.hidden)
+            {
+                this.isActive = false
+            } else
+            {
+                this.isActive = true
+            }
+        })
 
         this.sizes.on('resize', () =>
         {
@@ -59,19 +74,25 @@ export default class Experience
 
     update()
     {
-        this.stats.begin()
+        if (!this.isActive) return
+
+        if (this.debug.active && this.stats) this.stats.begin()
 
         this.camera.update()
         this.movement.update()
         this.world.update()
         this.renderer.update()
 
-        this.stats.end()
+        if (this.debug.active && this.stats) this.stats.end()
     }
 
     destroy()
     {
-        document.body.removeChild(this.stats.dom)
+        if (this.debug.active && this.stats) 
+        {
+            document.body.removeChild(this.stats.dom)
+        }
+
         this.sizes.off('resize')
         this.time.off('tick')
 

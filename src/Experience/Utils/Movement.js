@@ -1,15 +1,18 @@
+import Experience from "../Experience";
+
 export default class Movement
 {
     constructor()
     {
+        this.experience = new Experience();
         this.velocity = 0;
         this.currentSpeed = 0;
         this.input = { left: false, right: false };
 
-        this.forwardSpeed = 0.8;
-        this.maxSpeed = 0.8
-        this.turnSpeed = 0.02;
-        this.friction = 0.96;
+        this.forwardSpeed = 2;
+        this.maxSpeed = 1.5
+        this.turnSpeed = 0.05;
+        this.friction = 0.92;
 
         this.initEventListeners();
     }
@@ -28,16 +31,18 @@ export default class Movement
 
     update()
     {
+        const deltaTime = this.experience.time.delta;
+
         let targetVelocity = 0;
         if (this.input.left) targetVelocity = -this.maxSpeed;
         if (this.input.right) targetVelocity = this.maxSpeed;
 
         if (targetVelocity !== 0)
         {
-            this.velocity += (targetVelocity - this.velocity) * this.turnSpeed;
+            this.velocity += (targetVelocity - this.velocity) * this.turnSpeed * deltaTime;
         } else
         {
-            this.velocity *= this.friction;
+            this.velocity *= Math.pow(this.friction, deltaTime);
         }
 
         if (Math.abs(this.velocity) < 0.001) this.velocity = 0;
