@@ -14,17 +14,21 @@ export default class Movement
         this.turnSpeed = 0.05;
         this.friction = 0.92;
 
+        this.isEnabled = false;
+
         this.initEventListeners();
     }
 
     initEventListeners()
     {
+        this.isEnabled = true;
         window.addEventListener('keydown', (e) => this.handleKey(e.code, true));
         window.addEventListener('keyup', (e) => this.handleKey(e.code, false));
     }
 
     handleKey(code, isPressed)
     {
+        if (this.isEnabled === false) return;
         if (code === 'ArrowLeft' || code === 'KeyA') this.input.left = isPressed;
         if (code === 'ArrowRight' || code === 'KeyD') this.input.right = isPressed;
     }
@@ -48,10 +52,19 @@ export default class Movement
         if (Math.abs(this.velocity) < 0.001) this.velocity = 0;
     }
 
+    disable()
+    {
+        this.isEnabled = false
+        this.input = { left: false, right: false };
+        this.velocity = 0
+        this.forwardSpeed = 0
+    }
+
     reset()
     {
+        this.isEnabled = true;
         this.velocity = 0;
         this.input = { left: false, right: false };
-        return this.velocity;
+        this.forwardSpeed = 2;
     }
 }

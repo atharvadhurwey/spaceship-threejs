@@ -34,22 +34,15 @@ export default class World
 
             if (this.map.checkCollisions(this.ship.mesh))
             {
-                this.gameActive = false
-                this.score.gameOver()
-                this.handleCrash()
+                this.ship.explode()
+                this.movement.disable();
             }
         }
     }
 
-    handleCrash()
+    reset()
     {
-        this.gameActive = false;
-        setTimeout(() =>
-        {
-            this.ship.reset();
-            this.map.reset();
-
-            this.gameActive = true;
-        }, 500);
+        this.ship.reset();
+        this.map.reset();
     }
 }

@@ -1,31 +1,37 @@
 import * as THREE from 'three';
 
-export default class TubeTrail
+export default class DualTubeTrail
 {
-    constructor(scene, target, offset = new THREE.Vector3(0, 0, 1), length = 20, maxRadius = 0.2, color = 0x00ffff)
+    constructor(scene, target, leftOffset = new THREE.Vector3(-1, 0, 1), rightOffset = new THREE.Vector3(1, 0, 1), length = 20, maxRadius = 0.2, color = 0x00ffff)
     {
         this.scene = scene;
         this.target = target;
-        this.offset = offset;
+        
+        this.leftOffset = leftOffset;
+        this.rightOffset = rightOffset;
+        
         this.length = length;
         this.maxRadius = maxRadius;
         this.radialSegments = 5;
 
-        this.path = [];
+        this.leftPath = [];
+        this.rightPath = [];
 
-        const startPos = this.getEmissionPosition();
+        const startPosLeft = this.getEmissionPosition(this.leftOffset);
+        const startPosRight = this.getEmissionPosition(this.rightOffset);
+        
         for (let i = 0; i < this.length; i++)
         {
-            let p = startPos.clone();
-            p.z += i * 0.5;
-            this.path.push(p);
+            let pL = startPosLeft.clone();
+            pL.z += i * 0.5;
+            this.leftPath.push(pL);
+
+            let pR = startPosRight.clone();
+            pR.z += i * 0.5;
+            this.rightPath.push(pR);
         }
 
-        this.geometry = new THREE.BufferGeometry();
-        const vertexCount = this.length * (this.radialSegments + 1);
-        this.positions = new Float32Array(vertexCount * 3);
         this.indices = [];
-
         for (let j = 0; j < this.length - 1; j++)
         {
             for (let i = 0; i < this.radialSegments; i++)
@@ -39,52 +45,76 @@ export default class TubeTrail
             }
         }
 
-        this.geometry.setIndex(this.indices);
-        this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
-
         this.material = new THREE.MeshBasicMaterial({
             color: color,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            transparent: true,
+            depthTest: false,
+            opacity: 1.0
         });
 
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.mesh.frustumCulled = false;
-        this.scene.add(this.mesh);
+        const vertexCount = this.length * (this.radialSegments + 1);
+
+        this.leftGeometry = new THREE.BufferGeometry();
+        this.leftPositions = new Float32Array(vertexCount * 3);
+        this.leftGeometry.setIndex(this.indices);
+        this.leftGeometry.setAttribute('position', new THREE.BufferAttribute(this.leftPositions, 3));
+        
+        this.leftMesh = new THREE.Mesh(this.leftGeometry, this.material);
+        this.leftMesh.frustumCulled = false;
+        this.scene.add(this.leftMesh);
+
+        this.rightGeometry = new THREE.BufferGeometry();
+        this.rightPositions = new Float32Array(vertexCount * 3);
+        this.rightGeometry.setIndex(this.indices);
+        this.rightGeometry.setAttribute('position', new THREE.BufferAttribute(this.rightPositions, 3));
+        
+        this.rightMesh = new THREE.Mesh(this.rightGeometry, this.material);
+        this.rightMesh.frustumCulled = false;
+        this.scene.add(this.rightMesh);
     }
 
-    getEmissionPosition()
+    getEmissionPosition(offset)
     {
-        const worldPos = this.offset.clone();
+        const worldPos = offset.clone();
         worldPos.applyMatrix4(this.target.matrixWorld);
         return worldPos;
     }
 
     update(zShift = 0, xShift = 0)
     {
-        const currentPos = this.getEmissionPosition();
+        const currentPosLeft = this.getEmissionPosition(this.leftOffset);
+        const currentPosRight = this.getEmissionPosition(this.rightOffset);
 
-        for (let i = 0; i < this.path.length; i++)
+        for (let i = 0; i < this.length; i++)
         {
-            this.path[i].z += zShift;
-            this.path[i].x -= xShift;
+            this.leftPath[i].z += zShift;
+            this.leftPath[i].x -= xShift;
+
+            this.rightPath[i].z += zShift;
+            this.rightPath[i].x -= xShift;
         }
 
-        this.path.pop();
-        this.path.unshift(currentPos);
+        this.leftPath.pop();
+        this.leftPath.unshift(currentPosLeft);
 
-        this.updateGeometry();
+        this.rightPath.pop();
+        this.rightPath.unshift(currentPosRight);
+
+        this.updateGeometry(this.leftPath, this.leftGeometry);
+        this.updateGeometry(this.rightPath, this.rightGeometry);
     }
 
-    updateGeometry()
+    updateGeometry(path, geometry)
     {
-        const pArray = this.geometry.attributes.position.array;
+        const pArray = geometry.attributes.position.array;
 
         for (let i = 0; i < this.length; i++)
         {
             const indexOffset = i * (this.radialSegments + 1);
-            const center = this.path[i];
+            const center = path[i];
 
-            const targetPoint = (i < this.length - 1) ? this.path[i + 1] : this.path[i - 1];
+            const targetPoint = (i < this.length - 1) ? path[i + 1] : path[i - 1];
             let dir = new THREE.Vector3().subVectors(targetPoint, center).normalize();
             if (i === this.length - 1) dir.negate();
 
@@ -113,6 +143,6 @@ export default class TubeTrail
                 pArray[(indexOffset + j) * 3 + 2] = vz;
             }
         }
-        this.geometry.attributes.position.needsUpdate = true;
+        geometry.attributes.position.needsUpdate = true;
     }
 }

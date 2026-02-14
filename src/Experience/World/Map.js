@@ -35,6 +35,8 @@ export default class Map
         this.chunks = [];
         this._inverseMatrix = new THREE.Matrix4();
 
+        this.collisionPoint = null;
+
         this.processTemplate();
         this.createInfiniteMap();
     }
@@ -58,7 +60,7 @@ export default class Map
                     this.chunkLength = size.z;
                     this.chunkWidth = size.x;
 
-                    // child.userData.isCollider = true;
+                    child.userData.isCollider = true;
 
                     child.material.color.set(0xE4E2DB);
 
@@ -200,15 +202,15 @@ export default class Map
         if (!shipGroup) return false;
 
         let shipCollider = shipGroup.children.find(child => /collider/i.test(child.name));
-
         if (!shipCollider || !shipCollider.geometry) return false;
 
         shipCollider.updateMatrixWorld();
 
+        if (!shipCollider.geometry.boundingBox) shipCollider.geometry.computeBoundingBox();
+
         for (const chunk of this.chunks)
         {
-            if (chunk.position.z > this.chunkLength || chunk.position.z < -this.chunkLength) continue;
-
+            if (Math.abs(chunk.position.z) > this.chunkLength) continue;
             if (Math.abs(chunk.position.x) > this.chunkWidth) continue;
 
             const mapColliders = chunk.userData.colliders;
@@ -217,20 +219,44 @@ export default class Map
             {
                 mapCollider.updateMatrixWorld();
 
-                this._inverseMatrix.copy(mapCollider.matrixWorld).invert();
-                this._inverseMatrix.multiply(shipCollider.matrixWorld);
+                const shipToMapMatrix = new THREE.Matrix4()
+                    .copy(mapCollider.matrixWorld).invert()
+                    .multiply(shipCollider.matrixWorld);
 
-                const hit = mapCollider.geometry.boundsTree.intersectsGeometry(
-                    shipCollider.geometry,
-                    this._inverseMatrix
-                );
+                let collisionPoint = null;
 
-                if (hit) return true;
+                mapCollider.geometry.boundsTree.shapecast({
+                    intersectsBounds: (box) =>
+                    {
+                        const localShipBox = shipCollider.geometry.boundingBox.clone().applyMatrix4(shipToMapMatrix);
+                        return box.intersectsBox(localShipBox);
+                    },
+
+                    intersectsTriangle: (tri) =>
+                    {
+                        const hit = shipCollider.geometry.boundsTree.intersectsGeometry(
+                            mapCollider.geometry,
+                            shipToMapMatrix.clone().invert(),
+                            tri 
+                        );
+
+                        if (hit)
+                        {
+                            collisionPoint = tri.a.clone().applyMatrix4(mapCollider.matrixWorld);
+                            return true; 
+                        }
+                    }
+                });
+
+                if (collisionPoint)
+                {
+                    this.collisionPoint = collisionPoint
+                    return true;
+                }
             }
         }
         return false;
     }
-
     reset()
     {
         for (const chunk of this.chunks)
