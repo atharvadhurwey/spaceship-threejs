@@ -17,7 +17,7 @@ export default class WaterTrail
 
     this.geometry = new THREE.BufferGeometry();
     this.positions = new Float32Array(this.particleCount * 3);
-    this.lives = new Float32Array(this.particleCount); 
+    this.lives = new Float32Array(this.particleCount);
     this.velocities = [];
 
     for (let i = 0; i < this.particleCount; i++) 

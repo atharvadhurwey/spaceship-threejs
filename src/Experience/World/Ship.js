@@ -46,6 +46,7 @@ export default class Ship
         {
             if (child.name.includes('collider'))
             {
+                child.geometry.scale(0.7, 0.7, 0.7);
                 child.geometry.computeBoundsTree();
                 child.raycast = acceleratedRaycast;
 

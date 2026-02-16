@@ -6,10 +6,10 @@ export default class DualTubeTrail
     {
         this.scene = scene;
         this.target = target;
-        
+
         this.leftOffset = leftOffset;
         this.rightOffset = rightOffset;
-        
+
         this.length = length;
         this.maxRadius = maxRadius;
         this.radialSegments = 5;
@@ -19,7 +19,7 @@ export default class DualTubeTrail
 
         const startPosLeft = this.getEmissionPosition(this.leftOffset);
         const startPosRight = this.getEmissionPosition(this.rightOffset);
-        
+
         for (let i = 0; i < this.length; i++)
         {
             let pL = startPosLeft.clone();
@@ -49,7 +49,6 @@ export default class DualTubeTrail
             color: color,
             side: THREE.DoubleSide,
             transparent: true,
-            depthTest: false,
             opacity: 1.0
         });
 
@@ -59,7 +58,7 @@ export default class DualTubeTrail
         this.leftPositions = new Float32Array(vertexCount * 3);
         this.leftGeometry.setIndex(this.indices);
         this.leftGeometry.setAttribute('position', new THREE.BufferAttribute(this.leftPositions, 3));
-        
+
         this.leftMesh = new THREE.Mesh(this.leftGeometry, this.material);
         this.leftMesh.frustumCulled = false;
         this.scene.add(this.leftMesh);
@@ -68,7 +67,7 @@ export default class DualTubeTrail
         this.rightPositions = new Float32Array(vertexCount * 3);
         this.rightGeometry.setIndex(this.indices);
         this.rightGeometry.setAttribute('position', new THREE.BufferAttribute(this.rightPositions, 3));
-        
+
         this.rightMesh = new THREE.Mesh(this.rightGeometry, this.material);
         this.rightMesh.frustumCulled = false;
         this.scene.add(this.rightMesh);
