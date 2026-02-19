@@ -12,37 +12,47 @@ export default class World
         this.movement = this.experience.movement
         this.resources = this.experience.resources
 
-        // Wait for resources
+        // 1. Add a flag to prevent multiple collision triggers
+        this.isResetting = false 
+
         this.resources.on('ready', () =>
         {
             // Setup
             this.map = new Map()
             this.ship = new Ship()
             this.environment = new Environment()
-
-            this.gameActive = true
         })
     }
 
     update()
     {
-        if (this.gameActive && this.ship && this.map && this.environment)
+        if (this.ship && this.map && this.environment)
         {
             this.ship.update()
             this.map.update(this.movement.velocity, this.movement.forwardSpeed)
             this.environment.update()
 
-            if (this.map.checkCollisions(this.ship.mesh))
+            if (!this.isResetting && this.map.checkCollisions(this.ship.mesh))
             {
+                this.isResetting = true 
+
                 this.ship.explode()
                 this.movement.disable();
+
+                setTimeout(() => 
+                {
+                    this.reset();
+                }, 3000);
             }
         }
     }
 
     reset()
     {
+        this.movement.reset();
         this.ship.reset();
         this.map.reset();
+        
+        this.isResetting = false; 
     }
 }

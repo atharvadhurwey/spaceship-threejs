@@ -1,0 +1,42 @@
+export const MAP_THEMES = {
+  pillar: {
+    modelKey: 'pillarScapeModel',
+    fog: {
+      color: 0x0081bf,
+      near: 200,
+      far: 2000
+    },
+    background: {
+      top: '#1a5b8c',
+      bottom: '#87ceeb'
+    },
+    env: {
+      intensity: 0.4
+    },
+    directionalLight: {
+      color: 0xf2f2f2,
+      intensity: 5,
+      position: { x: 520, y: 900, z: -650 }
+    },
+  },
+  pyramid: {
+    modelKey: 'redApexModel',
+    fog: {
+      color: 0x1d0000,
+      near: 200,
+      far: 2000
+    },
+    background: {
+      top: '#000000',
+      bottom: '#ce3838'
+    },
+    env: {
+      intensity: 0.4
+    },
+    directionalLight: {
+      color: 0x6d0000,
+      intensity: 5,
+      position: { x: 0, y: 500, z: -1450 }
+    },
+  }
+};
