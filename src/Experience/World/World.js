@@ -13,7 +13,7 @@ export default class World
         this.resources = this.experience.resources
 
         // 1. Add a flag to prevent multiple collision triggers
-        this.isResetting = false 
+        this.isResetting = false
 
         this.resources.on('ready', () =>
         {
@@ -34,7 +34,7 @@ export default class World
 
             if (!this.isResetting && this.map.checkCollisions(this.ship.mesh))
             {
-                this.isResetting = true 
+                this.isResetting = true
 
                 this.ship.explode()
                 this.movement.disable();
@@ -52,7 +52,7 @@ export default class World
         this.movement.reset();
         this.ship.reset();
         this.map.reset();
-        
-        this.isResetting = false; 
+
+        this.isResetting = false;
     }
 }

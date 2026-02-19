@@ -419,6 +419,13 @@ export default class Environment
             this.scene.fog.color.setHex(theme.fog.color)
             this.scene.fog.near = theme.fog.near
             this.scene.fog.far = theme.fog.far
+
+            if (this.fogParams)
+            {
+                this.fogParams.color = theme.fog.color;
+                this.fogParams.near = theme.fog.near;
+                this.fogParams.far = theme.fog.far;
+            }
         }
 
         if (this.bgColors)
@@ -437,6 +444,17 @@ export default class Environment
                 theme.directionalLight.position.y,
                 theme.directionalLight.position.z
             )
+
+            if (this.sunLightParams)
+            {
+                this.sunLightParams.color = theme.directionalLight.color;
+                this.sunLightParams.intensity = theme.directionalLight.intensity;
+                this.sunLightParams.dir = {
+                    x: theme.directionalLight.position.x,
+                    y: theme.directionalLight.position.y,
+                    z: theme.directionalLight.position.z
+                };
+            }
         }
 
         if (this.environmentMap)
@@ -457,6 +475,11 @@ export default class Environment
         if (this.experience.world.map && this.experience.world.map.updateTheme)
         {
             this.experience.world.map.updateTheme(theme)
+        }
+
+        if (this.debug.active && this.debugFolder)
+        {
+            this.debugFolder.refresh();
         }
     }
 

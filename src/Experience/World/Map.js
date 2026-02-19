@@ -158,7 +158,7 @@ export default class Map
 
         if (this.debug.active)
         {
-            this.waterFolder = this.debugFolder.addFolder({ title: 'Water Shader Controls' });
+            this.waterFolder = this.debugFolder.addFolder({ title: 'Water Shader' });
 
             this.waterFolder.addBinding(this.waterParams, 'waveStrength', { min: 0, max: 0.5, step: 0.001, label: 'WaveStrength' }).on('change', (ev) => { this.waterFloor.material.uniforms.uWaveStrength.value = ev.value; });
 
@@ -171,18 +171,76 @@ export default class Map
 
     createPillarScapeMap()
     {
-        this.map = this.resources.items.pillarScapeModel.scene;
-
         const box = new THREE.Box3();
         this.areaTemplates = [];
 
         const sharedMapMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
-            vertexColors: true,
         });
 
-        const colorTop = new THREE.Color('#FEFEFE');
-        const colorBottom = new THREE.Color('#DDDFCB');
+        this.mapColors = {
+            top: '#FEFEFE',
+            bottom: '#DDDFCB'
+        };
+
+        this.mapUniforms = {
+            uColorTop: { value: new THREE.Color(this.mapColors.top) },
+            uColorBottom: { value: new THREE.Color(this.mapColors.bottom) },
+            uMaxY: { value: 100 },
+            uMinY: { value: 0 },
+        };
+
+        sharedMapMaterial.onBeforeCompile = (shader) =>
+        {
+            shader.uniforms.uColorTop = this.mapUniforms.uColorTop;
+            shader.uniforms.uColorBottom = this.mapUniforms.uColorBottom;
+            shader.uniforms.uMinY = this.mapUniforms.uMinY;
+            shader.uniforms.uMaxY = this.mapUniforms.uMaxY;
+
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <common>',
+                `
+                #include <common>
+                varying float vHeight;
+                `
+            );
+
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <begin_vertex>',
+                `
+                #include <begin_vertex>
+                vHeight = position.y; 
+                `
+            );
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <common>',
+                `
+                #include <common>
+                uniform vec3 uColorTop;
+                uniform vec3 uColorBottom;
+                uniform float uMinY;
+                uniform float uMaxY;
+                varying float vHeight;
+                `
+            );
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <color_fragment>',
+                `
+                #include <color_fragment>
+                
+                // Normalize height between 0.0 and 1.0
+                float gradientFactor = smoothstep(uMinY, uMaxY, vHeight);
+                
+                // Mix the colors
+                vec3 gradientColor = mix(uColorBottom, uColorTop, gradientFactor);
+                
+                // Apply to diffuse color (preserves lighting/shadows)
+                diffuseColor.rgb *= gradientColor;
+                `
+            );
+        };
 
         this.map.traverse((child) =>
         {
@@ -209,23 +267,6 @@ export default class Map
 
                 child.material = sharedMapMaterial;
 
-                child.geometry.computeBoundingBox();
-                const minY = child.geometry.boundingBox.min.y;
-                const maxY = child.geometry.boundingBox.max.y;
-                const height = maxY - minY;
-
-                const positionAttribute = child.geometry.attributes.position;
-                const colors = [];
-
-                for (let i = 0; i < positionAttribute.count; i++)
-                {
-                    const y = positionAttribute.getY(i);
-                    const alpha = Math.max(0.0, Math.min(1.0, (y - minY) / height));
-                    const vertexColor = colorBottom.clone().lerp(colorTop, alpha);
-                    colors.push(vertexColor.r, vertexColor.g, vertexColor.b);
-                }
-
-                child.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
                 child.geometry.computeBoundsTree();
                 child.userData.isCollider = true;
                 this.areaTemplates.push(child.clone());
@@ -236,12 +277,29 @@ export default class Map
 
         if (this.chunkLength === 0) this.chunkLength = 100;
         if (this.chunkWidth === 0) this.chunkWidth = 100;
+
+        if (this.debug.active)
+        {
+            this.mapFolder = this.debugFolder.addFolder({ title: 'Map Colors' });
+
+            this.mapFolder.addBinding(this.mapColors, 'top', { label: 'TopColor', view: 'color', }).on('change', (ev) =>
+            {
+                this.mapUniforms.uColorTop.value.set(ev.value);
+            });
+
+            this.mapFolder.addBinding(this.mapColors, 'bottom', { label: 'BottomColor', view: 'color', }).on('change', (ev) =>
+            {
+                this.mapUniforms.uColorBottom.value.set(ev.value);
+            });
+
+            this.mapFolder.addBinding(this.mapUniforms.uMaxY, 'value', { label: 'MaxHeight', min: 0, max: 200, step: 0.1 })
+
+            this.mapFolder.addBinding(this.mapUniforms.uMinY, 'value', { label: 'MinHeight', min: 0, max: 50, step: 0.1 });
+        }
     }
 
     createRedApexMap()
     {
-        this.map = this.resources.items.redApexModel.scene;
-
         const box = new THREE.Box3();
         this.areaTemplates = [];
 
@@ -459,11 +517,13 @@ export default class Map
 
         if (theme.modelKey === 'pillarScapeModel')
         {
+            this.map = this.resources.items.pillarScapeModel.scene;
             this.createPillarScapeMap();
             this.createWaterFloor();
         }
         else if (theme.modelKey === 'redApexModel')
         {
+            this.map = this.resources.items.redApexModel.scene;
             this.createRedApexMap();
             this.createSandFloor();
         }
