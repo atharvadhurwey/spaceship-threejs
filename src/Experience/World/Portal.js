@@ -20,7 +20,7 @@ export default class Portal
 
   init() 
   {
-    this.uniforms = {
+  this.uniforms = {
       uTime: { value: 0 },
       uFrequency: { value: 1.4 },
       uDistortion: { value: 0.01 },
@@ -96,15 +96,7 @@ export default class Portal
     // Hide Map Chunks
     for (const chunk of this.map.chunks)
     {
-      chunk.traverse((child) =>
-      {
-        chunk.visible = false;
-        if (child.isMesh && child.material)
-        {
-          child.material.opacity = 1;
-          child.material.transparent = false;
-        }
-      });
+      chunk.traverse((child) => { chunk.visible = false; });
     }
 
     // Hide specific floor elements
@@ -114,16 +106,19 @@ export default class Portal
 
       if (this.map.activeFloor.name === 'WaterFloor')
       {
-        this.map.activeFloor.mesh.material.uniforms.uOpacity.value = 0;
-        this.map.activeFloor.mesh.material.depthTest = false;
         currentThemeInst.planetBackground.visible = false;
         currentThemeInst.cloudMesh.visible = false;
+
+        this.map.activeFloor.mesh.material.depthTest = false;
+        tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 1 }, { value: 0.0, duration: 0.5, ease: "power2.outIn" }, 0);
       } else if (this.map.activeFloor.name === 'SandFloor')
       {
         currentThemeInst.planetBackground.visible = false;
         currentThemeInst.backgroundScreen.visible = false;
         currentThemeInst.pyramid.visible = false;
-        this.map.activeFloor.mesh.visible = false;
+
+        this.map.activeFloor.mesh.material.depthTest = false;
+        tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 1 }, { value: 0.0, duration: 0.5, ease: "power2.outIn" }, 0);
       }
     }
 
@@ -134,7 +129,7 @@ export default class Portal
       fov: 90, duration: 2.0, ease: "power2.outIn",
       onUpdate: () => this.camera.updateProjectionMatrix()
     }, 0);
-    tl.to(this.uniforms.uFacOffset, { value: 0.0, duration: 1.2, ease: "power2.outIn" }, 0);
+    tl.to(this.uniforms.uFacOffset, { value: 0.0, duration: 0.8, ease: "power2.outIn" }, 0);
   }
 
   exit() 
@@ -159,6 +154,51 @@ export default class Portal
         this.canExitPortal = false;
       }
     });
+
+    const fadeInTarget = (target, duration = 2.0) =>
+    {
+      if (!target) return;
+
+      tl.set(target, { visible: true }, 0);
+
+      target.traverse((child) =>
+      {
+        if (child.isMesh && child.material)
+        {
+          const materials = Array.isArray(child.material) ? child.material : [child.material];
+          materials.forEach(mat =>
+          {
+            mat.transparent = true;
+            tl.fromTo(mat, { opacity: 0 }, { opacity: 1, duration: duration, ease: "power2.outIn" }, 0);
+          });
+        }
+      });
+    };
+
+    for (const chunk of this.map.chunks)
+    {
+      fadeInTarget(chunk, 2.0);
+    }
+
+    if (this.map.activeFloor)
+    {
+      const currentThemeInst = this.experience.world.environment.currentThemeInstance;
+
+      if (this.map.activeFloor.name === 'WaterFloor')
+      {
+        tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 0 }, { value: 1.0, duration: 0.5, ease: "power2.outIn" }, 0);
+
+        fadeInTarget(currentThemeInst.planetBackground, 2.0);
+        fadeInTarget(currentThemeInst.cloudMesh, 2.0);
+      }
+      else if (this.map.activeFloor.name === 'SandFloor')
+      {
+        fadeInTarget(currentThemeInst.planetBackground, 2.0);
+        fadeInTarget(currentThemeInst.backgroundScreen, 2.0);
+        fadeInTarget(currentThemeInst.pyramid, 2.0);
+        tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 0 }, { value: 1.0, duration: 0.5, ease: "power2.outIn" }, 0);
+      }
+    }
 
     tl.to(this.mesh.scale, { x: 1, y: 1, z: 1, duration: 2.0, ease: "power2.outIn" }, 0);
     tl.to(this.mesh.position, { x: this.mesh.position.x, y: this.mesh.position.y, z: 0, duration: 2.0, ease: "power2.outIn" }, 0);

@@ -40,7 +40,8 @@ export class SandFloor
       uDuneHeight: { value: this.params.duneHeight },
       uBaseColor: { value: new THREE.Color(this.params.baseColor) },
       uShadowColor: { value: new THREE.Color(this.params.shadowColor) },
-      uOffset: { value: new THREE.Vector2(0, 0) }
+      uOffset: { value: new THREE.Vector2(0, 0) },
+      uOpacity: { value: 1.0 }
     };
 
     const material = new CustomShaderMaterial({
@@ -50,6 +51,7 @@ export class SandFloor
       uniforms: this.uniforms,
       roughness: 0.8,
       metalness: 0.0,
+      transparent: true,
     });
 
     const geometry = new THREE.PlaneGeometry(this.chunkWidth * 4, this.chunkWidth * 4, 32, 32);

@@ -67,7 +67,7 @@ export default class Map
         {
             const terrainData = TerrainGenerator.build(
                 this.resources.items.redApexModel.scene,
-                ['area1001'],
+                ['area1001', 'area1002'],
                 { top: '#790000', bottom: '#494949' },
                 this.debugFolder
             );

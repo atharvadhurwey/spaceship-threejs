@@ -4,6 +4,7 @@ uniform vec2 uWindDirection;
 uniform float uDuneScale;
 uniform float uDuneHeight;
 uniform vec2 uOffset;
+uniform float uOpacity; // Added uOpacity uniform
 
 // Simple 2D Hash
 float hash(vec2 p) {
@@ -68,5 +69,6 @@ void main() {
     vec3 finalColor = mix(uShadowColor, uBaseColor, mixFactor);
 
     // CSM Hook: Update Color
-    csm_DiffuseColor = vec4(finalColor, 1.0);
+    // Applied uOpacity to the alpha channel here
+    csm_DiffuseColor = vec4(finalColor, uOpacity);
 }
