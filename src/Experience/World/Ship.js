@@ -18,9 +18,19 @@ export default class Ship
         this.scene = this.experience.scene;
         this.movement = this.experience.movement;
         this.resources = this.experience.resources.items;
+        this.debug = this.experience.debug;
 
-        this.debug = false;
-        this.helpers = [];
+        if (this.debug.active)
+        {
+            this.helpers = [];
+            this.debugFolder = this.debug.ui.addFolder({ title: 'Ship', expanded: true });
+        }
+
+        this.collisionsEnabled = true;
+        if (this.debug?.active && this.debugFolder)
+        {
+            this.debugFolder.addBinding(this, 'collisionsEnabled', { label: 'Collisions' });
+        }
 
         this.trail = null;
         this.trailOffsets = [];
@@ -32,11 +42,15 @@ export default class Ship
 
         this.explosion = new Explosion(this.scene);
         this.isExploding = false;
-        this.isExploding = false;
 
         this.setupModel();
         this.setupTrails();
-        this.setupExplosion();
+    }
+
+    toggleCollisions()
+    {
+        this.collisionsEnabled = !this.collisionsEnabled;
+        if (this.debug.active) { this.debugFolder.refresh() };
     }
 
     setupModel()
@@ -47,11 +61,11 @@ export default class Ship
         {
             if (child.name.includes('collider'))
             {
-                child.geometry.scale(0.7, 0.7, 0.7);
+                child.geometry.scale(0.7, 0.4, 0.7);
                 child.geometry.computeBoundsTree();
                 child.raycast = acceleratedRaycast;
 
-                if (this.debug)
+                if (this.debug.active)
                 {
                     const helper = new BVHHelper(child, 20);
                     helper.color.set(0x00ff00);
@@ -145,7 +159,7 @@ export default class Ship
 
         this.mesh.rotation.z = -velocity * 0.9;
 
-        if (this.debug && this.helpers.length > 0) { for (const helper of this.helpers) helper.update(); }
+        if (this.debug.active && this.helpers.length > 0) { for (const helper of this.helpers) helper.update(); }
 
         if (this.trail)
         {
@@ -162,70 +176,6 @@ export default class Ship
 
             this.waterTrail.update(zShift, xShift);
         }
-    }
-
-    setupExplosion()
-    {
-        const sphereGeo = new THREE.SphereGeometry(1, 32, 32);
-        const sphereMat = new THREE.MeshBasicMaterial({
-            color: 0x474747,
-            transparent: true,
-            opacity: 0,
-        });
-
-        this.explosionSphere = new THREE.Mesh(sphereGeo, sphereMat);
-        this.explosionSphere.visible = false;
-        this.scene.add(this.explosionSphere);
-
-        this.debrisCount = 40;
-        this.debrisPhysics = [];
-
-        const debrisGeo = new THREE.BufferGeometry();
-        const positions = new Float32Array(this.debrisCount * 3);
-
-        for (let i = 0; i < this.debrisCount; i++)
-        {
-            this.debrisPhysics.push({ velocity: new THREE.Vector3() });
-            positions[i * 3] = 0; positions[i * 3 + 1] = 0; positions[i * 3 + 2] = 0;
-        }
-
-        debrisGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-        const debrisMat = new THREE.PointsMaterial({
-            size: 0.8,
-            color: 0xf9b64e,
-            transparent: true,
-            depthWrite: false,
-        });
-
-        this.debrisParticles = new THREE.Points(debrisGeo, debrisMat);
-        this.debrisParticles.visible = false;
-        this.scene.add(this.debrisParticles);
-
-        this.smokeCount = 1000;
-        this.smokeLifespan = this.explosionDuration;
-        this.smokeDropTimer = 0;
-        this.smokeIndex = 0;
-
-        const smokeGeo = new THREE.BufferGeometry();
-        const smokePos = new Float32Array(this.smokeCount * 3);
-        const smokeCol = new Float32Array(this.smokeCount * 3);
-        this.smokeVelocities = new Float32Array(this.smokeCount * 3);
-        this.smokeAges = new Float32Array(this.smokeCount).fill(999);
-
-        smokeGeo.setAttribute('position', new THREE.BufferAttribute(smokePos, 3));
-        smokeGeo.setAttribute('color', new THREE.BufferAttribute(smokeCol, 3));
-
-        const smokeMat = new THREE.PointsMaterial({
-            size: 0.8,
-            vertexColors: true,
-            transparent: true,
-            depthWrite: false,
-        });
-
-        this.smokeParticles = new THREE.Points(smokeGeo, smokeMat);
-        this.smokeParticles.visible = false;
-        this.scene.add(this.smokeParticles);
     }
 
     explode()

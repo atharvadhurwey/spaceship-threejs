@@ -41,29 +41,16 @@ export default class Experience
             document.body.appendChild(this.stats.dom)
         }
 
-        this.isActive = true // Track state
+        this.isActive = true
 
-        // Visibility Change Listener
         document.addEventListener('visibilitychange', () =>
         {
-            if (document.hidden)
-            {
-                this.isActive = false
-            } else
-            {
-                this.isActive = true
-            }
+            this.isActive = document.hidden ? false : true
         })
 
-        this.sizes.on('resize', () =>
-        {
-            this.resize()
-        })
+        this.sizes.on('resize', () => { this.resize() })
 
-        this.time.on('tick', () =>
-        {
-            this.update()
-        })
+        this.time.on('tick', () => { this.update() })
     }
 
     resize()

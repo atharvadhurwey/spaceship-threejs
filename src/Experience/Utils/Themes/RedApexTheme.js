@@ -52,10 +52,10 @@ export default class RedApexTheme
       transparent: true, depthWrite: false,
     });
 
-    const planetBackground = new THREE.Mesh(planetGeo, planetMat);
-    planetBackground.position.set(this.planetParams.dir.x, this.planetParams.dir.y, this.planetParams.dir.z);
-    planetBackground.renderOrder = -1;
-    this.group.add(planetBackground);
+    this.planetBackground = new THREE.Mesh(planetGeo, planetMat);
+    this.planetBackground.position.set(this.planetParams.dir.x, this.planetParams.dir.y, this.planetParams.dir.z);
+    this.planetBackground.renderOrder = -1;
+    this.group.add(this.planetBackground);
 
     if (this.debug.active && this.parentDebugFolder)
     {
@@ -66,7 +66,7 @@ export default class RedApexTheme
         .on('change', (ev) => planetMat.uniforms.uOpacity.value = ev.value);
 
       planetFolder.addBinding(this.planetParams, 'dir', { label: 'Direction' })
-        .on('change', (ev) => { planetBackground.position.set(ev.value.x, ev.value.y, ev.value.z); });
+        .on('change', (ev) => { this.planetBackground.position.set(ev.value.x, ev.value.y, ev.value.z); });
 
       planetFolder.addBinding(this.planetParams, 'fresnelColor', { view: 'color', label: 'FrColor' })
         .on('change', (ev) => { planetMat.uniforms.uFresnelColor.value.set(ev.value); });
@@ -111,10 +111,10 @@ export default class RedApexTheme
       depthWrite: false,
     });
 
-    const backgroundScreen = new THREE.Mesh(mountainGeo, mountainMat);
-    backgroundScreen.position.set(this.mountainParams.dir.x, this.mountainParams.dir.y, this.mountainParams.dir.z);
+    this.backgroundScreen = new THREE.Mesh(mountainGeo, mountainMat);
+    this.backgroundScreen.position.set(this.mountainParams.dir.x, this.mountainParams.dir.y, this.mountainParams.dir.z);
 
-    this.group.add(backgroundScreen);
+    this.group.add(this.backgroundScreen);
 
     if (this.debug.active)
     {
@@ -129,12 +129,12 @@ export default class RedApexTheme
 
       const updateGeometry = () =>
       {
-        backgroundScreen.geometry.dispose();
-        backgroundScreen.geometry = new THREE.PlaneGeometry(this.mountainParams.width, this.mountainParams.height, 1, 1);
+        this.backgroundScreen.geometry.dispose();
+        this.backgroundScreen.geometry = new THREE.PlaneGeometry(this.mountainParams.width, this.mountainParams.height, 1, 1);
       };
 
       mountainFolder.addBinding(this.mountainParams, 'dir', { label: 'Direction' })
-        .on('change', (ev) => { backgroundScreen.position.set(ev.value.x, ev.value.y, ev.value.z); });
+        .on('change', (ev) => { this.backgroundScreen.position.set(ev.value.x, ev.value.y, ev.value.z); });
 
       mountainFolder.addBinding(this.mountainParams, 'offset', { min: -2.0, max: 2.0, step: 0.001, label: 'HorizontalScroll' })
         .on('change', (ev) => { mountainMat.uniforms.uOffset.value = ev.value; });
@@ -158,10 +158,10 @@ export default class RedApexTheme
     this.pyramidParams = {
       angle: 2.1,
       heightOffset: 0.0,
-      baseWidth: 1.5,
-      slope: 0.5,
+      baseWidth: 1.67,
+      slope: 0.4,
       color: '#b40000',
-      splitLevel: 1.5,
+      splitLevel: 1.74,
       splitGap: 0.27,
       dir: { x: 0, y: 17, z: -1450 },
       width: 1000,
@@ -218,7 +218,7 @@ export default class RedApexTheme
       }).on('change', (ev) => { this.pyramid.material.uniforms.uBaseWidth.value = ev.value; });
 
       pyramidFolder.addBinding(this.pyramidParams, 'slope', {
-        min: 0.0, max: 1.0, label: 'Steepness'
+        min: 0.0, max: 1.0, label: 'slope'
       }).on('change', (ev) => { this.pyramid.material.uniforms.uSlope.value = ev.value; });
 
       pyramidFolder.addBinding(this.pyramidParams, 'heightOffset', {

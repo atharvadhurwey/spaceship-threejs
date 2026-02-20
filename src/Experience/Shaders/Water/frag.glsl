@@ -4,6 +4,7 @@ uniform sampler2D uDudvTexture;
 uniform float uTime;
 uniform float uWaveStrength;
 uniform float uWaveSpeed;
+uniform float uOpacity;
 
 varying vec4 vUv;
 #include <logdepthbuf_pars_fragment>
@@ -20,7 +21,9 @@ void main()
   uv.xy += distortion;
 
   vec4 base = texture2DProj(tDiffuse, uv);
-  gl_FragColor = vec4(mix(base.rgb, color, 0.3), 1.0);
+  
+  gl_FragColor = vec4(mix(base.rgb, color, 0.3), uOpacity); 
+  
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }

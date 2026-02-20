@@ -5,9 +5,8 @@ import Experience from '../Experience';
 
 import TerrainGenerator from '../Utils/TerrainGenerator';
 import { WaterFloor, SandFloor } from '../Utils/Floor';
+import Portal from './Portal';
 
-import portalFragShader from '../Shaders/Portal/frag.glsl';
-import portalVertShader from '../Shaders/Portal/vert.glsl';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -45,6 +44,8 @@ export default class Map
         this.activeFloor = null;
         this.terrainDebugFolder = null;
         this.collisionPoint = null;
+
+        this.portal = new Portal(this.experience, this)
     }
 
     updateTheme(theme)
@@ -56,7 +57,7 @@ export default class Map
             const terrainData = TerrainGenerator.build(
                 this.resources.items.pillarScapeModel.scene,
                 ['area1', 'area2', 'area3'],
-                { top: '#FEFEFE', bottom: '#DDDFCB' },
+                { top: '#ffffff', bottom: '#bec1a4', maxY: 26 },
                 this.debugFolder
             );
             this._applyTerrainData(terrainData);
@@ -170,12 +171,9 @@ export default class Map
     {
         const deltaTime = this.experience.time.delta;
 
-        if (this.portal) this.portal.material.uniforms.uTime.value += deltaTime * 0.02;
+        if (this.portal) this.portal.update(deltaTime);
 
-        if (this.activeFloor)
-        {
-            this.activeFloor.update(deltaTime, forwardSpeed, shipVelocity); // Delegated update logic!
-        }
+        if (this.activeFloor) { this.activeFloor.update(deltaTime, forwardSpeed, shipVelocity); }
 
         const boundaryX = (this.mapTotalWidth / 2);
         const maxXOffset = this.chunkWidth * 0.9;
@@ -198,7 +196,7 @@ export default class Map
                 }
 
                 chunk.position.x += sharedRowOffset;
-                const templateMesh = this.areaTemplates[this.difficultyLevel] || this.areaTemplates[0];
+                const templateMesh = this.areaTemplates.length > 1 ? this.areaTemplates[this.difficultyLevel] : this.areaTemplates[0];
                 chunk.children[0].geometry = templateMesh.geometry;
             }
 
@@ -283,7 +281,7 @@ export default class Map
             uFacOffset: { value: 0.1 },
             uColor: { value: new THREE.Color(0.961, 0.592, 0.078) },
             uEnterProgress: { value: 0.0 },
-            uOpacity: { value: 1.0 }
+            uOpacity: { value: 0.0 } // keep it invisible
         };
 
         const material = new THREE.ShaderMaterial({
@@ -297,44 +295,55 @@ export default class Map
 
         this.portal = new THREE.Mesh(geometry, material);
         this.portal.position.set(0, 5, -5);
+        this.portal.scale.set(0, 0, 0);
         this.scene.add(this.portal);
 
+        this.canExitPortal = false;
+
         window.addEventListener('dblclick', () => this.enterPortal());
-        window.addEventListener('contextmenu', () => this.exitPortal());
 
         if (this.debug.active) 
         {
             const portalFolder = this.debugFolder.addFolder({ title: 'Portal' });
-
             portalFolder.addBinding(this.portalUniforms.uFrequency, 'value', { label: 'Frequency', min: 0, max: 10, step: 0.01 });
-
             portalFolder.addBinding(this.portalUniforms.uDistortion, 'value', { label: 'Distortion', min: 0, max: 0.1, step: 0.001 });
-
             portalFolder.addBinding(this.portalUniforms.uNoiseScale, 'value', { label: 'Noise Scale', min: 0, max: 10, step: 0.1 });
-
             portalFolder.addBinding(this.portalUniforms.uNoiseOffset, 'value', { label: 'Noise Offset', min: 0, max: 2, step: 0.01 });
-
             portalFolder.addBinding(this.portalUniforms.uBrightness, 'value', { label: 'Brightness', min: 0, max: 2, step: 0.01 });
-
             portalFolder.addBinding(this.portalUniforms.uFacOffset, 'value', { label: 'Factor Offset', min: -2, max: 2, step: 0.01 });
-
             portalFolder.addBinding(this.portalUniforms.uColor, 'value', { label: 'Color', view: 'color', color: { type: 'float' } });
         }
     }
 
     enterPortal()
     {
-        this.originalFov = this.camera.fov;
+        if (this.canExitPortal) return;
 
         const tl = gsap.timeline({
-            onComplete: () => console.log("Portal transition complete!")
+            onComplete: () =>
+            {
+                this.canExitPortal = true;
+                setTimeout(() =>
+                {
+                    this.exitPortal()
+                }, 2000);
+            }
         });
+
+        tl.to(this.portal.scale, { x: 1, y: 1, z: 1, duration: 0.5, ease: "power2.out" }, 0);
+        tl.to(this.portalUniforms.uOpacity, { value: 1.0, duration: 0.5, ease: "power2.out" }, 0);
+        tl.fromTo(this.portalUniforms.uFacOffset, { value: 2.0 }, { value: 0.1, duration: 0.1, ease: "power2.out" }, 0);
+
+
+        this.originalFov = this.camera.fov;
 
         for (const chunk of this.chunks)
         {
-            this.scene.remove(chunk);
             chunk.traverse((child) =>
             {
+
+                chunk.visible = false;
+
                 if (child.isMesh && child.material)
                 {
                     child.material.opacity = 1;
@@ -342,31 +351,53 @@ export default class Map
                 }
             });
         }
-        this.chunks = [];
 
-        if (this.waterFloor)
+        if (this.activeFloor)
         {
-            this.scene.remove(this.waterFloor);
-            this.waterFloor.material.opacity = 1;
+            if (this.activeFloor.name === 'WaterFloor')
+            {
+                this.activeFloor.mesh.material.uniforms.uOpacity.value = 0
+                this.activeFloor.mesh.material.depthTest = false;
+
+                this.experience.world.environment.currentThemeInstance.planetBackground.visible = false
+                this.experience.world.environment.currentThemeInstance.cloudMesh.visible = false
+            } else if (this.activeFloor.name === 'SandFloor')
+            {
+                this.experience.world.environment.currentThemeInstance.planetBackground.visible = false
+                this.experience.world.environment.currentThemeInstance.backgroundScreen.visible = false
+                this.experience.world.environment.currentThemeInstance.pyramid.visible = false
+                this.activeFloor.mesh.visible = false
+            }
         }
 
         tl.to(this.portal.scale, { x: 50, y: 50, z: 50, duration: 2.0, ease: "power2.outIn" }, 0);
-        tl.to(this.portal.position, { x: this.portal.position.x, y: this.portal.position.y, z: 100, duration: 2.0, ease: "power2.outIn" }, 0);
+        tl.to(this.portal.position, { x: this.portal.position.x, y: this.portal.position.y, z: 100, duration: 1.0, ease: "power2.outIn" }, 0);
         tl.to(this.portalUniforms.uEnterProgress, { value: 1.0, duration: 2.0, ease: "power2.outIn" }, 0);
         tl.to(this.camera, {
             fov: 90, duration: 2.0, ease: "power2.outIn",
             onUpdate: () => this.camera.updateProjectionMatrix()
         }, 0);
-        tl.to(this.portalUniforms.uFacOffset, { value: 0.0, duration: 2.0, ease: "power2.outIn" }, 0);
+        tl.to(this.portalUniforms.uFacOffset, { value: 0.0, duration: 1.2, ease: "power2.outIn" }, 0);
     }
 
     exitPortal()
     {
+        if (!this.canExitPortal) return;
+
+        if (this.experience.world.environment.currentTheme === 'pillar')
+        {
+            this.experience.world.environment.switchTheme('pyramid');
+        } else
+        {
+            this.experience.world.environment.switchTheme('pillar');
+        }
+
         const tl = gsap.timeline({
             onComplete: () =>
             {
-                console.log("Portal exit transition complete!");
-                this.portal.visible = false;
+                this.portal.scale.set(0, 0, 0);
+                this.portal.position.set(0, 5, -5);
+                this.canExitPortal = false;
             }
         });
 

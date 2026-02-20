@@ -2,9 +2,9 @@ export const MAP_THEMES = {
   pillar: {
     modelKey: 'pillarScapeModel',
     fog: {
-      color: 0x0081bf,
-      near: 200,
-      far: 2000
+      color: 0x528ca8,
+      near: 0,
+      far: 1000
     },
     background: {
       top: '#1a5b8c',
@@ -23,8 +23,8 @@ export const MAP_THEMES = {
     modelKey: 'redApexModel',
     fog: {
       color: 0x1d0000,
-      near: 200,
-      far: 2000
+      near: 0,
+      far: 1000
     },
     background: {
       top: '#000000',

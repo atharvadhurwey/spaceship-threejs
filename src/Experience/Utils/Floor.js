@@ -14,6 +14,7 @@ export class SandFloor
     this.scene = scene;
     this.debug = debug;
     this.chunkWidth = chunkWidth;
+    this.name = 'SandFloor';
 
     this.params = {
       windSpeed: 1.0,
@@ -95,11 +96,13 @@ export class WaterFloor
     this.resources = resources;
     this.chunkWidth = chunkWidth;
     this.chunkLength = chunkLength;
+    this.name = 'WaterFloor';
 
     this.params = {
       waveStrength: 0.04,
       waveSpeed: 0.1,
       waterColor: '#005e76',
+      opacity: 1.0,
     };
 
     this.init();
@@ -119,6 +122,8 @@ export class WaterFloor
     customShader.uniforms.uWaveStrength = { value: this.params.waveStrength };
     customShader.uniforms.uWaveSpeed = { value: this.params.waveSpeed };
 
+    customShader.uniforms.uOpacity = { value: this.params.opacity };
+
     this.mesh = new Reflector(
       new THREE.CircleGeometry(this.chunkWidth * 4, 16),
       {
@@ -130,6 +135,7 @@ export class WaterFloor
       }
     );
 
+    this.mesh.material.transparent = true;
     this.mesh.rotation.x = -Math.PI / 2;
     this.mesh.position.z = -this.chunkLength / 4;
     this.mesh.position.y = 0.1;
@@ -141,6 +147,7 @@ export class WaterFloor
       this.debugFolder.addBinding(this.params, 'waveStrength', { min: 0, max: 0.5, step: 0.001 }).on('change', (ev) => this.mesh.material.uniforms.uWaveStrength.value = ev.value);
       this.debugFolder.addBinding(this.params, 'waveSpeed', { min: 0, max: 1, step: 0.001 });
       this.debugFolder.addBinding(this.params, 'waterColor', { view: 'color' }).on('change', (ev) => this.mesh.material.uniforms.color.value.set(ev.value));
+      this.debugFolder.addBinding(this.params, 'opacity', { min: 0, max: 1, step: 0.01 }).on('change', (ev) => this.mesh.material.uniforms.uOpacity.value = ev.value);
     }
   }
 

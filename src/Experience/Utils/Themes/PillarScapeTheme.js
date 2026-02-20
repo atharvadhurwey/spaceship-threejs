@@ -47,15 +47,15 @@ export default class PillarScapeTheme
         depthWrite: false
       })
 
-      const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial)
-      cloudMesh.position.set((Math.random() - 0.5) * 800, 200 + Math.random() * 100, -500 - Math.random() * 500)
+      this.cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial)
+      this.cloudMesh.position.set((Math.random() - 0.5) * 800, 200 + Math.random() * 100, -500 - Math.random() * 500)
 
       const randomScale = Math.random() * 0.8 + 0.5
-      cloudMesh.scale.set(randomScale, randomScale, randomScale)
-      cloudMesh.userData.speed = Math.random() * 0.05 + 0.02
+      this.cloudMesh.scale.set(randomScale, randomScale, randomScale)
+      this.cloudMesh.userData.speed = Math.random() * 0.05 + 0.02
 
-      this.group.add(cloudMesh)
-      this.clouds.push(cloudMesh)
+      this.group.add(this.cloudMesh)
+      this.clouds.push(this.cloudMesh)
     }
   }
 
@@ -91,10 +91,10 @@ export default class PillarScapeTheme
       depthWrite: false,
     });
 
-    const planetBackground = new THREE.Mesh(geometry, material);
-    planetBackground.position.set(this.planetParams.dir.x, this.planetParams.dir.y, this.planetParams.dir.z);
-    planetBackground.renderOrder = -1;
-    this.group.add(planetBackground);
+    this.planetBackground = new THREE.Mesh(geometry, material);
+    this.planetBackground.position.set(this.planetParams.dir.x, this.planetParams.dir.y, this.planetParams.dir.z);
+    this.planetBackground.renderOrder = -1;
+    this.group.add(this.planetBackground);
 
     if (this.debug.active && this.parentDebugFolder)
     {
@@ -104,7 +104,7 @@ export default class PillarScapeTheme
       planetFolder.addBinding(this.planetParams, 'opacity', { min: 0, max: 1, label: 'Opacity' })
         .on('change', (ev) => material.uniforms.uOpacity.value = ev.value);
       planetFolder.addBinding(this.planetParams, 'dir', { label: 'Direction' })
-        .on('change', (ev) => planetBackground.position.set(ev.value.x, ev.value.y, ev.value.z));
+        .on('change', (ev) => this.planetBackground.position.set(ev.value.x, ev.value.y, ev.value.z));
     }
   }
 
@@ -128,7 +128,6 @@ export default class PillarScapeTheme
   {
     this.scene.remove(this.group)
 
-    // Traverse and dispose materials/geometries
     this.group.traverse((child) =>
     {
       if (child instanceof THREE.Mesh)
@@ -143,7 +142,10 @@ export default class PillarScapeTheme
       }
     })
 
-    // Clean up debug UI specific to this theme
+    this.group.clear()
+
+    this.clouds = []
+
     if (this.debug.active && this.parentDebugFolder)
     {
       this.debugFolders.forEach(folder => this.parentDebugFolder.remove(folder))

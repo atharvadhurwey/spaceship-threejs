@@ -48,7 +48,6 @@ export default class Environment
         const theme = MAP_THEMES[themeKey]
         if (!theme) return console.warn(`Theme ${themeKey} not found`)
 
-        // 1. Cleanup old theme completely
         if (this.currentThemeInstance)
         {
             this.currentThemeInstance.dispose();
@@ -56,11 +55,8 @@ export default class Environment
         }
 
         this.currentTheme = themeKey
-
-        // 2. Update Global Environment Variables
         this.updateGlobalSettings(theme)
 
-        // 3. Instantiate the new theme
         if (themeKey === 'pillar')
         {
             this.currentThemeInstance = new PillarScapeTheme(this.experience, this.themeDebugFolder)

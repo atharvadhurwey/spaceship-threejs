@@ -32,7 +32,7 @@ export default class World
             this.map.update(this.movement.velocity, this.movement.forwardSpeed)
             this.environment.update()
 
-            if (!this.isResetting && this.map.checkCollisions(this.ship.mesh))
+            if (!this.isResetting && this.ship.collisionsEnabled && this.map.checkCollisions(this.ship.mesh))
             {
                 this.isResetting = true
 
