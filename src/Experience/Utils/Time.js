@@ -2,7 +2,6 @@ import EventEmitter from './EventEmitter.js'
 
 export default class Time extends EventEmitter
 {
-
     constructor()
     {
         super()
@@ -12,10 +11,21 @@ export default class Time extends EventEmitter
         this.elapsed = 0
         this.delta = 16
 
-        window.requestAnimationFrame(() =>
+        this.animationFrameId = null
+
+        document.addEventListener('visibilitychange', () =>
         {
-            this.tick()
+            if (document.hidden)
+            {
+                window.cancelAnimationFrame(this.animationFrameId)
+            } else
+            {
+                this.current = window.performance.now()
+                this.tick()
+            }
         })
+
+        this.tick()
     }
 
     tick()
@@ -25,11 +35,10 @@ export default class Time extends EventEmitter
 
         this.current = currentTime
         this.elapsed = this.current - this.start
-
         this.delta = actualDelta / (1000 / 60)
 
         this.trigger('tick')
 
-        window.requestAnimationFrame(() => this.tick())
+        this.animationFrameId = window.requestAnimationFrame(() => this.tick())
     }
 }

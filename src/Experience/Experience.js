@@ -41,15 +41,7 @@ export default class Experience
             document.body.appendChild(this.stats.dom)
         }
 
-        this.isActive = true
-
-        document.addEventListener('visibilitychange', () =>
-        {
-            this.isActive = document.hidden ? false : true
-        })
-
         this.sizes.on('resize', () => { this.resize() })
-
         this.time.on('tick', () => { this.update() })
     }
 
@@ -61,8 +53,6 @@ export default class Experience
 
     update()
     {
-        if (!this.isActive) return
-
         if (this.debug.active && this.stats) this.stats.begin()
 
         this.camera.update()

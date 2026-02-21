@@ -3,7 +3,7 @@ import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUti
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast, BVHHelper } from 'three-mesh-bvh';
 import Experience from '../Experience';
 import TubeTrail from '../Utils/TubeTrail';
-import WaterTrail from '../Utils/WaterTrail';
+import particlesTrail from '../Utils/ParticlesTrail';
 import Explosion from '../Utils/Explosion';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -35,8 +35,8 @@ export default class Ship
         this.trail = null;
         this.trailOffsets = [];
 
-        this.waterTrail = null;
-        this.waterTrailOffsets = [];
+        this.particlesTrail = null;
+        this.particlesTrailOffsets = [];
 
         this.model = this.resources.spaceship1.scene;
 
@@ -93,7 +93,7 @@ export default class Ship
 
             if (child.name.includes('wing'))
             {
-                this.waterTrailOffsets.push(child.position.clone());
+                this.particlesTrailOffsets.push(child.position.clone());
                 if (child.isMesh)
                 {
                     child.visible = false;
@@ -123,14 +123,14 @@ export default class Ship
             0x00ffff
         );
 
-        this.waterTrail = new WaterTrail(
+        this.particlesTrail = new particlesTrail(
             this.scene,
             this.mesh,
-            this.waterTrailOffsets[0],
-            this.waterTrailOffsets[1],
+            this.particlesTrailOffsets[0],
+            this.particlesTrailOffsets[1],
             100,
             0.19,
-            0xffffff
+            0xB2BEB5
         );
     }
 
@@ -149,7 +149,7 @@ export default class Ship
             } else
             {
                 if (this.trail) this.trail.material.opacity = this.explosion.opacity;
-                if (this.waterTrail) this.waterTrail.material.uniforms.globalOpacity.value = this.explosion.opacity;
+                if (this.particlesTrail) this.particlesTrail.material.uniforms.globalOpacity.value = this.explosion.opacity;
             }
             return;
         }
@@ -169,12 +169,12 @@ export default class Ship
             this.trail.update(zShift, xShift);
         }
 
-        if (this.waterTrail)
+        if (this.particlesTrail)
         {
             const zShift = forwardSpeed * 0.2 * deltaTime;
             const xShift = velocity * 0.1 * deltaTime;
 
-            this.waterTrail.update(zShift, xShift);
+            this.particlesTrail.update(zShift, xShift);
         }
     }
 
@@ -205,6 +205,6 @@ export default class Ship
         this.explosion.reset();
 
         if (this.trail) this.trail.material.opacity = 1.0;
-        if (this.waterTrail) this.waterTrail.material.uniforms.globalOpacity.value = 1.0;
+        if (this.particlesTrail) this.particlesTrail.material.uniforms.globalOpacity.value = 1.0;
     }
 }

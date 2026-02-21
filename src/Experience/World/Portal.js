@@ -15,12 +15,15 @@ export default class Portal
 
     this.canExitPortal = false;
 
+    this._handleDoubleClick = this.enter.bind(this);
+    this._updateCameraProjection = () => this.camera.updateProjectionMatrix();
+
     this.init();
   }
 
   init() 
   {
-  this.uniforms = {
+    this.uniforms = {
       uTime: { value: 0 },
       uFrequency: { value: 1.4 },
       uDistortion: { value: 0.01 },
@@ -47,7 +50,7 @@ export default class Portal
     this.mesh.scale.set(0, 0, 0);
     this.scene.add(this.mesh);
 
-    window.addEventListener('dblclick', () => this.enter());
+    window.addEventListener('dblclick', this._handleDoubleClick);
 
     if (this.debug.active) 
     {
@@ -74,16 +77,13 @@ export default class Portal
   {
     if (this.canExitPortal) return;
 
-    if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() } // Disable Ship Collisions
+    if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() }
 
     const tl = gsap.timeline({
       onComplete: () =>
       {
         this.canExitPortal = true;
-        setTimeout(() =>
-        {
-          this.exit();
-        }, 2000);
+        setTimeout(() => this.exit(), 2000);
       }
     });
 
@@ -93,29 +93,26 @@ export default class Portal
 
     this.originalFov = this.camera.fov;
 
-    // Hide Map Chunks
     for (const chunk of this.map.chunks)
     {
-      chunk.traverse((child) => { chunk.visible = false; });
+      chunk.visible = false;
     }
 
-    // Hide specific floor elements
     if (this.map.activeFloor)
     {
       const currentThemeInst = this.experience.world.environment.currentThemeInstance;
+      const isWater = this.map.activeFloor.name === 'WaterFloor';
+      const isSand = this.map.activeFloor.name === 'SandFloor';
 
-      if (this.map.activeFloor.name === 'WaterFloor')
+      if (isWater || isSand)
       {
         currentThemeInst.planetBackground.visible = false;
-        currentThemeInst.cloudMesh.visible = false;
-
-        this.map.activeFloor.mesh.material.depthTest = false;
-        tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 1 }, { value: 0.0, duration: 0.5, ease: "power2.outIn" }, 0);
-      } else if (this.map.activeFloor.name === 'SandFloor')
-      {
-        currentThemeInst.planetBackground.visible = false;
-        currentThemeInst.backgroundScreen.visible = false;
-        currentThemeInst.pyramid.visible = false;
+        if (isWater) currentThemeInst.cloudMesh.visible = false;
+        if (isSand)
+        {
+          currentThemeInst.backgroundScreen.visible = false;
+          currentThemeInst.pyramid.visible = false;
+        }
 
         this.map.activeFloor.mesh.material.depthTest = false;
         tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 1 }, { value: 0.0, duration: 0.5, ease: "power2.outIn" }, 0);
@@ -123,11 +120,12 @@ export default class Portal
     }
 
     tl.to(this.mesh.scale, { x: 50, y: 50, z: 50, duration: 2.0, ease: "power2.outIn" }, 0);
-    tl.to(this.mesh.position, { x: this.mesh.position.x, y: this.mesh.position.y, z: 100, duration: 1.0, ease: "power2.outIn" }, 0);
+    tl.to(this.mesh.position, { z: 100, duration: 1.0, ease: "power2.outIn" }, 0);
     tl.to(this.uniforms.uEnterProgress, { value: 1.0, duration: 2.0, ease: "power2.outIn" }, 0);
+
     tl.to(this.camera, {
       fov: 90, duration: 2.0, ease: "power2.outIn",
-      onUpdate: () => this.camera.updateProjectionMatrix()
+      onUpdate: this._updateCameraProjection
     }, 0);
     tl.to(this.uniforms.uFacOffset, { value: 0.0, duration: 0.8, ease: "power2.outIn" }, 0);
   }
@@ -136,15 +134,10 @@ export default class Portal
   {
     if (!this.canExitPortal) return;
 
-    if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() } // Enable Ship Collisions
+    if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() }
 
-    if (this.experience.world.environment.currentTheme === 'pillar')
-    {
-      this.experience.world.environment.switchTheme('pyramid');
-    } else
-    {
-      this.experience.world.environment.switchTheme('pillar');
-    }
+    const env = this.experience.world.environment;
+    env.switchTheme(env.currentTheme === 'pillar' ? 'pyramid' : 'pillar');
 
     const tl = gsap.timeline({
       onComplete: () =>
@@ -161,53 +154,65 @@ export default class Portal
 
       tl.set(target, { visible: true }, 0);
 
+      const uniqueMaterials = new Set();
+
       target.traverse((child) =>
       {
         if (child.isMesh && child.material)
         {
           const materials = Array.isArray(child.material) ? child.material : [child.material];
-          materials.forEach(mat =>
-          {
-            mat.transparent = true;
-            tl.fromTo(mat, { opacity: 0 }, { opacity: 1, duration: duration, ease: "power2.outIn" }, 0);
-          });
+          materials.forEach(mat => uniqueMaterials.add(mat));
         }
+      });
+
+      uniqueMaterials.forEach(mat =>
+      {
+        mat.transparent = true;
+        tl.fromTo(mat, { opacity: 0 }, { opacity: 1, duration: duration, ease: "power2.outIn" }, 0);
       });
     };
 
     for (const chunk of this.map.chunks)
     {
-      fadeInTarget(chunk, 2.0);
+      fadeInTarget(chunk, 1.0);
     }
 
     if (this.map.activeFloor)
     {
       const currentThemeInst = this.experience.world.environment.currentThemeInstance;
+      const isWater = this.map.activeFloor.name === 'WaterFloor';
+      const isSand = this.map.activeFloor.name === 'SandFloor';
 
-      if (this.map.activeFloor.name === 'WaterFloor')
+      if (isWater || isSand)
       {
         tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 0 }, { value: 1.0, duration: 0.5, ease: "power2.outIn" }, 0);
+        fadeInTarget(currentThemeInst.planetBackground, 2.0);
 
-        fadeInTarget(currentThemeInst.planetBackground, 2.0);
-        fadeInTarget(currentThemeInst.cloudMesh, 2.0);
-      }
-      else if (this.map.activeFloor.name === 'SandFloor')
-      {
-        fadeInTarget(currentThemeInst.planetBackground, 2.0);
-        fadeInTarget(currentThemeInst.backgroundScreen, 2.0);
-        fadeInTarget(currentThemeInst.pyramid, 2.0);
-        tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 0 }, { value: 1.0, duration: 0.5, ease: "power2.outIn" }, 0);
+        if (isWater) fadeInTarget(currentThemeInst.cloudMesh, 2.0);
+        if (isSand)
+        {
+          fadeInTarget(currentThemeInst.backgroundScreen, 2.0);
+          fadeInTarget(currentThemeInst.pyramid, 2.0);
+        }
       }
     }
 
     tl.to(this.mesh.scale, { x: 1, y: 1, z: 1, duration: 2.0, ease: "power2.outIn" }, 0);
-    tl.to(this.mesh.position, { x: this.mesh.position.x, y: this.mesh.position.y, z: 0, duration: 2.0, ease: "power2.outIn" }, 0);
+    tl.to(this.mesh.position, { z: 0, duration: 2.0, ease: "power2.outIn" }, 0);
     tl.to(this.uniforms.uEnterProgress, { value: 0.0, duration: 2.0, ease: "power2.outIn" }, 0);
     tl.to(this.uniforms.uFacOffset, { value: -1.0, duration: 2.0, ease: "power2.outIn" }, 0);
     tl.to(this.camera, {
       fov: this.originalFov || 45, duration: 2.0, ease: "power2.outIn",
-      onUpdate: () => this.camera.updateProjectionMatrix()
+      onUpdate: this._updateCameraProjection
     }, 0);
     tl.to(this.uniforms.uOpacity, { value: 0.0, duration: 2.0, ease: "power2.outIn" }, 0);
+  }
+
+  dispose() 
+  {
+    window.removeEventListener('dblclick', this._handleDoubleClick);
+    this.mesh.geometry.dispose();
+    this.mesh.material.dispose();
+    this.scene.remove(this.mesh);
   }
 }

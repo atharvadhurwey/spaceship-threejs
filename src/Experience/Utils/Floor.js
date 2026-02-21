@@ -6,11 +6,13 @@ import waterFragShader from '../Shaders/Water/frag.glsl';
 import waterVertShader from '../Shaders/Water/vert.glsl';
 import desertFragShader from '../Shaders/Desert/frag.glsl'
 import desertVertShader from '../Shaders/Desert/vert.glsl'
+import Experience from '../Experience';
 
 export class SandFloor
 {
   constructor(scene, debug, chunkWidth)
   {
+    this.experience = new Experience();
     this.scene = scene;
     this.debug = debug;
     this.chunkWidth = chunkWidth;
@@ -64,6 +66,11 @@ export class SandFloor
 
     this.scene.add(this.mesh);
 
+    if (this.experience.world.ship)
+    {
+      this.experience.world.ship.particlesTrail.material.uniforms.color.value = new THREE.Color('#B2BEB5');
+    }
+
     if (this.debug.active)
     {
       this.debugFolder = this.debug.ui.addFolder({ title: 'Desert Shader' });
@@ -93,6 +100,7 @@ export class WaterFloor
 {
   constructor(scene, debug, resources, chunkWidth, chunkLength)
   {
+    this.experience = new Experience();
     this.scene = scene;
     this.debug = debug;
     this.resources = resources;
@@ -142,6 +150,12 @@ export class WaterFloor
     this.mesh.position.z = -this.chunkLength / 4;
     this.mesh.position.y = 0.1;
     this.scene.add(this.mesh);
+
+    if (this.experience.world.ship)
+    {
+      this.experience.world.ship.particlesTrail.material.uniforms.color.value = new THREE.Color('#ffffff');
+    }
+
 
     if (this.debug.active)
     {

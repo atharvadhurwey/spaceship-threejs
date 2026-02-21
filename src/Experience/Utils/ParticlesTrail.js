@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export default class WaterTrail 
+export default class ParticlesTrail 
 {
   constructor(scene, target, leftOffset = new THREE.Vector3(-2, 0, 1), rightOffset = new THREE.Vector3(2, 0, 1), lifeTime = 100, maxRadius = 0.2, color = 0x00ffff) 
   {
@@ -72,7 +72,6 @@ export default class WaterTrail
     `,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
     });
 
     this.particles = new THREE.Points(this.geometry, this.material);
