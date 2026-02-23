@@ -14,6 +14,7 @@ export default class Resources extends EventEmitter
             { name: 'pillarScapeModel', type: 'gltfModel', path: 'models/Regions/pillarScape.glb' },
             { name: 'redApexModel', type: 'gltfModel', path: 'models/Regions/redApex.glb' },
             { name: 'spaceship1', type: 'gltfModel', path: 'models/Spaceships/spaceship1.glb' },
+            { name: 'hand', type: 'gltfModel', path: 'models/Regions/hand.glb' },
             { name: 'cloud1', type: 'texture', path: 'textures/clouds/01.png' },
             { name: 'cloud2', type: 'texture', path: 'textures/clouds/02.png' },
             { name: 'cloud3', type: 'texture', path: 'textures/clouds/03.png' },

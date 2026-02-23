@@ -38,5 +38,25 @@ export const MAP_THEMES = {
       intensity: 5,
       position: { x: 0, y: 500, z: -1450 }
     },
+  },
+  eye: {
+    modelKey: 'handModel',
+    fog: {
+      color: 0x000000,
+      near: 0,
+      far: 1000
+    },
+    background: {
+      top: '#000000',
+      bottom: '#6f6f6f'
+    },
+    env: {
+      intensity: 0.3
+    },
+    directionalLight: {
+      color: 0x626262,
+      intensity: 0,
+      position: { x: 0, y: 500, z: -1450 }
+    },
   }
 };

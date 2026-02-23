@@ -5,6 +5,7 @@ import PillarScapeTheme from '../Utils/Themes/PillarScapeTheme.js';
 import RedApexTheme from '../Utils/Themes/RedApexTheme.js';
 
 import { MAP_THEMES } from '../Utils/configFile'
+import VoidEyeTheme from '../Utils/Themes/VoidEyeTheme.js';
 
 export default class Environment
 {
@@ -38,6 +39,7 @@ export default class Environment
                 options: {
                     pillarScape: 'pillar',
                     redApex: 'pyramid',
+                    voidEye: 'eye'
                 }
             }).on('change', (ev) => { this.switchTheme(ev.value) })
         }
@@ -64,6 +66,9 @@ export default class Environment
         else if (themeKey === 'pyramid')
         {
             this.currentThemeInstance = new RedApexTheme(this.experience, this.themeDebugFolder)
+        } else if (themeKey === 'eye')
+        {
+            this.currentThemeInstance = new VoidEyeTheme(this.experience, this.themeDebugFolder)
         }
 
         if (this.experience.world.map && this.experience.world.map.updateTheme)

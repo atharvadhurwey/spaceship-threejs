@@ -86,6 +86,8 @@ export default class TerrainGenerator
 
         child.userData.isCollider = true;
 
+        // child.visible = false;  
+
         areaTemplates.push(child.clone());
       }
     });

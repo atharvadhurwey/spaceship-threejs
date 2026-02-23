@@ -4,7 +4,7 @@ import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-
 import Experience from '../Experience';
 
 import TerrainGenerator from '../Utils/TerrainGenerator';
-import { WaterFloor, SandFloor } from '../Utils/Floor';
+import { WaterFloor, SandFloor, VoidFloor } from '../Utils/Floor';
 import Portal from './Portal';
 
 
@@ -46,11 +46,35 @@ export default class Map
         this.collisionPoint = null;
 
         this.portal = new Portal(this.experience, this)
+
+        // this.createHand();
+    }
+
+    createHand()
+    {
+        this.hand = this.resources.items.hand
+
+
+        if (this.hand.animations && this.hand.animations.length > 0)
+        {
+            this.mixer = new THREE.AnimationMixer(this.hand.scene);
+            const action = this.mixer.clipAction(this.hand.animations[0]);
+            action.setLoop(THREE.LoopOnce);
+
+            action.clampWhenFinished = true;
+            action.play();
+        }
+
+        console.log(this.hand)
+
+        this.scene.add(this.hand.scene);
     }
 
     updateTheme(theme)
     {
         this.clearCurrentEnvironment();
+
+        this.noOfColumns = 3;
 
         if (theme.modelKey === 'pillarScapeModel')
         {
@@ -73,6 +97,17 @@ export default class Map
             );
             this._applyTerrainData(terrainData);
             this.activeFloor = new SandFloor(this.scene, this.debug, this.chunkWidth);
+        } else if (theme.modelKey === 'handModel')
+        {
+            const terrainData = TerrainGenerator.build(
+                this.resources.items.redApexModel.scene,
+                ['area1001', 'area1002'],
+                { top: '#000000', bottom: '#494949' },
+                this.debugFolder
+            );
+            this._applyTerrainData(terrainData);
+            this.activeFloor = new VoidFloor(this.scene, this.debug, this.resources, this.chunkWidth, this.chunkLength);
+            this.noOfColumns = 1
         }
 
         this.reset();
@@ -135,7 +170,7 @@ export default class Map
 
     createInfiniteMap()
     {
-        this.gridColumns = 3;
+        this.gridColumns = this.noOfColumns || 3;
         this.gridRows = 2;
         this.mapTotalWidth = this.gridColumns * this.chunkWidth;
         this.mapTotalDepth = this.gridRows * this.chunkLength;
@@ -171,9 +206,11 @@ export default class Map
     {
         const deltaTime = this.experience.time.delta;
 
+        if (this.mixer) this.mixer.update(deltaTime * 0.01);
+
         if (this.portal) this.portal.update(deltaTime);
 
-        if (this.activeFloor) { this.activeFloor.update(deltaTime, forwardSpeed, shipVelocity); }
+        if (this.activeFloor) { this.activeFloor.update(deltaTime, shipVelocity, forwardSpeed); }
 
         const boundaryX = (this.mapTotalWidth / 2);
         const maxXOffset = this.chunkWidth * 0.9;
@@ -190,7 +227,15 @@ export default class Map
 
                 if (sharedRowOffset === null)
                 {
-                    sharedRowOffset = (Math.random() - 0.5) * maxXOffset;
+                    // special case for void eye theme
+                    if (this.gridColumns === 1)
+                    {
+                        sharedRowOffset = 0;
+                    } else
+                    {
+                        sharedRowOffset = (Math.random() - 0.5) * maxXOffset;
+                    }
+
                     this.rowsPassed++;
                     this.difficultyLevel = Math.min(this.areaTemplates.length - 1, Math.floor(this.rowsPassed / this.rowsPerDifficulty));
                 }
@@ -200,8 +245,17 @@ export default class Map
                 chunk.children[0].geometry = templateMesh.geometry;
             }
 
-            if (chunk.position.x < -boundaryX) chunk.position.x += this.mapTotalWidth;
-            else if (chunk.position.x > boundaryX) chunk.position.x -= this.mapTotalWidth;
+            // special case for void eye theme
+            if (this.gridColumns === 1) 
+            {
+                const limitX = (this.chunkWidth / 2) * 0.99;
+                chunk.position.x = THREE.MathUtils.clamp(chunk.position.x, -limitX, limitX);
+            }
+            else 
+            {
+                if (chunk.position.x < -boundaryX) chunk.position.x += this.mapTotalWidth;
+                else if (chunk.position.x > boundaryX) chunk.position.x -= this.mapTotalWidth;
+            }
         }
     }
 

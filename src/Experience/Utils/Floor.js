@@ -81,7 +81,7 @@ export class SandFloor
     }
   }
 
-  update(deltaTime, forwardSpeed, velocity)
+  update(deltaTime, velocity, forwardSpeed)
   {
     this.uniforms.uTime.value += forwardSpeed * deltaTime;
     this.uniforms.uOffset.value.x += velocity * deltaTime;
@@ -179,6 +179,86 @@ export class WaterFloor
     this.mesh.material.dispose();
     if (typeof this.mesh.dispose === 'function') this.mesh.dispose();
     else if (this.mesh.getRenderTarget) this.mesh.getRenderTarget().dispose();
+    if (this.debugFolder) this.debugFolder.dispose();
+  }
+}
+
+export class VoidFloor
+{
+  constructor(scene, debug, resources, chunkWidth, chunkLength)
+  {
+    this.experience = new Experience();
+    this.scene = scene;
+    this.debug = debug;
+    this.resources = resources;
+    this.chunkWidth = chunkWidth;
+    this.chunkLength = chunkLength;
+    this.name = 'SimpleFloor';
+
+    this.params = {
+      color: '#1a1a1a',
+      opacity: 1.0,
+      roughness: 0.8,
+      metalness: 0.0,
+    };
+
+    this.init();
+  }
+
+  init()
+  {
+    const material = new THREE.MeshStandardMaterial({
+      color: this.params.color,
+      roughness: this.params.roughness,
+      metalness: this.params.metalness,
+      transparent: true,
+      opacity: this.params.opacity
+    });
+
+    const geometry = new THREE.PlaneGeometry(this.chunkWidth / 2, this.chunkLength, 32, 32);
+
+    this.mesh = new THREE.Mesh(geometry, material);
+
+    // Rotate to lay flat
+    this.mesh.rotation.x = -Math.PI / 2;
+    this.mesh.position.z = -this.chunkLength / 4;
+    this.mesh.position.y = 0.1;
+
+    this.mesh.receiveShadow = true;
+
+    this.scene.add(this.mesh);
+
+    if (this.experience.world.ship)
+    {
+      this.experience.world.ship.particlesTrail.material.uniforms.color.value = new THREE.Color('#ffffff');
+    }
+
+    if (this.debug.active)
+    {
+      this.debugFolder = this.debug.ui.addFolder({ title: 'Simple Floor' });
+
+      this.debugFolder.addBinding(this.params, 'color', { view: 'color' }).on('change', (ev) => this.mesh.material.color.set(ev.value));
+      this.debugFolder.addBinding(this.params, 'opacity', { min: 0, max: 1, step: 0.01 }).on('change', (ev) => this.mesh.material.opacity = ev.value);
+      this.debugFolder.addBinding(this.params, 'roughness', { min: 0, max: 1, step: 0.01 }).on('change', (ev) => this.mesh.material.roughness = ev.value);
+      this.debugFolder.addBinding(this.params, 'metalness', { min: 0, max: 1, step: 0.01 }).on('change', (ev) => this.mesh.material.metalness = ev.value);
+    }
+  }
+
+  update(deltaTime, velocity)
+  {
+    if (this.mesh)
+    {
+      this.mesh.position.x += -velocity * deltaTime;
+      const limitX = (this.chunkWidth / 4) * 0.99;
+      this.mesh.position.x = THREE.MathUtils.clamp(this.mesh.position.x, -limitX, limitX);
+    }
+  }
+
+  destroy()
+  {
+    this.scene.remove(this.mesh);
+    this.mesh.geometry.dispose();
+    this.mesh.material.dispose();
     if (this.debugFolder) this.debugFolder.dispose();
   }
 }
