@@ -38,9 +38,9 @@ export default class VoidEyeTheme
       speed: 200,
       minRadius: 200,
       maxRadius: 500,
-      zStart: -1500,
+      zStart: -1400,
       zEnd: 100,
-      fadeDistance: 400,
+      fadeDistance: 50,
       color: '#4b4b4b'
     }
 
@@ -137,7 +137,7 @@ export default class VoidEyeTheme
   {
     this.starsParams = {
       size: 3000,
-      position: { x: 0, y: 0, z: -1510 },
+      position: { x: 0, y: 300, z: -1510 },
       threshold: 8.0,
       exposure: 200.0,
       noiseScale: 500.0,
@@ -158,7 +158,7 @@ export default class VoidEyeTheme
       fragmentShader: starFragShader
     });
 
-    const geometry = new THREE.PlaneGeometry(this.starsParams.size, this.starsParams.size);
+    const geometry = new THREE.PlaneGeometry(this.starsParams.size, this.starsParams.size / 1.5);
     this.stars = new THREE.Mesh(geometry, material);
     this.stars.position.set(this.starsParams.position.x, this.starsParams.position.y, this.starsParams.position.z);
     this.scene.add(this.stars);
@@ -171,7 +171,7 @@ export default class VoidEyeTheme
       const updateGeometry = () =>
       {
         this.stars.geometry.dispose();
-        this.stars.geometry = new THREE.PlaneGeometry(this.starsParams.size, this.starsParams.size, 1, 1);
+        this.stars.geometry = new THREE.PlaneGeometry(this.starsParams.size, this.starsParams.size / 1.5, 1, 1);
       };
 
       starsFolder.addBinding(this.starsParams, 'size', { min: 100, max: 5000, step: 10, label: 'PlaneSize' })
@@ -201,7 +201,7 @@ export default class VoidEyeTheme
   {
     this.eyeParams = {
       size: 1000,
-      position: { x: 0, y: 300, z: -1500 },
+      position: { x: 0, y: 300, z: -1450 },
       innerRadius: 0.25,
       innerRadiusAnimAmp: 0.02,
       outerRadius: 1.0,

@@ -137,7 +137,8 @@ export default class Portal
     if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() }
 
     const env = this.experience.world.environment;
-    env.switchTheme(env.currentTheme === 'pillar' ? 'pyramid' : 'pillar');
+    if (env.currentTheme === 'pillar') env.switchTheme('pyramid');
+    else if (env.currentTheme === 'pyramid') env.switchTheme('eye');
 
     const tl = gsap.timeline({
       onComplete: () =>

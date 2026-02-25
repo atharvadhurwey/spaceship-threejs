@@ -6,6 +6,7 @@ import Experience from '../Experience';
 import TerrainGenerator from '../Utils/TerrainGenerator';
 import { WaterFloor, SandFloor, VoidFloor } from '../Utils/Floor';
 import Portal from './Portal';
+import VoidEyeAttacks from '../Utils/VoidEyeAttacks';
 
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -46,29 +47,8 @@ export default class Map
         this.collisionPoint = null;
 
         this.portal = new Portal(this.experience, this)
-
-        // this.createHand();
     }
 
-    createHand()
-    {
-        this.hand = this.resources.items.hand
-
-
-        if (this.hand.animations && this.hand.animations.length > 0)
-        {
-            this.mixer = new THREE.AnimationMixer(this.hand.scene);
-            const action = this.mixer.clipAction(this.hand.animations[0]);
-            action.setLoop(THREE.LoopOnce);
-
-            action.clampWhenFinished = true;
-            action.play();
-        }
-
-        console.log(this.hand)
-
-        this.scene.add(this.hand.scene);
-    }
 
     updateTheme(theme)
     {
@@ -92,22 +72,35 @@ export default class Map
             const terrainData = TerrainGenerator.build(
                 this.resources.items.redApexModel.scene,
                 ['area1001', 'area1002'],
-                { top: '#790000', bottom: '#494949' },
+                { top: '#b80000', bottom: '#727272' },
                 this.debugFolder
             );
             this._applyTerrainData(terrainData);
             this.activeFloor = new SandFloor(this.scene, this.debug, this.chunkWidth);
         } else if (theme.modelKey === 'handModel')
         {
-            const terrainData = TerrainGenerator.build(
-                this.resources.items.redApexModel.scene,
-                ['area1001', 'area1002'],
-                { top: '#000000', bottom: '#494949' },
-                this.debugFolder
-            );
-            this._applyTerrainData(terrainData);
-            this.activeFloor = new VoidFloor(this.scene, this.debug, this.resources, this.chunkWidth, this.chunkLength);
+            const tempGeo = new THREE.PlaneGeometry(1, 1, 1, 1);
+            const tempMat = new THREE.MeshStandardMaterial({
+                color: 0x222222,
+                roughness: 0.2
+            });
+
+            const tempMesh = new THREE.Mesh(tempGeo, tempMat);
+            tempMesh.position.set(0, 0, 0);
+            tempMesh.rotation.x = -Math.PI / 2;
+            tempMesh.visible = false;
+
+            const newTerrainData = {
+                areaTemplates: [tempMesh],
+                chunkLength: 1382.854263305664,
+                chunkWidth: 364.219970703125,
+                debugFolder: this.debugFolder
+            };
+
+            this._applyTerrainData(newTerrainData);
             this.noOfColumns = 1
+            this.activeFloor = new VoidFloor(this.scene, this.debug, this.resources, this.chunkWidth, this.chunkLength);
+            this.voidEyeAttacks = new VoidEyeAttacks(this.scene, this.chunkWidth, this.chunkLength);
         }
 
         this.reset();
@@ -134,6 +127,12 @@ export default class Map
             });
         }
         this.chunks = [];
+
+        if (this.voidEyeAttacks)
+        {
+            this.voidEyeAttacks.destroy();
+            this.voidEyeAttacks = null;
+        }
 
         // Clear Templates
         for (const template of this.areaTemplates)
@@ -163,6 +162,7 @@ export default class Map
     reset()
     {
         for (const chunk of this.chunks) this.scene.remove(chunk);
+        if (this.voidEyeAttacks) this.voidEyeAttacks.reset();
         this.chunks = [];
         this._shipColliderCache = null;
         this.createInfiniteMap();
@@ -206,11 +206,33 @@ export default class Map
     {
         const deltaTime = this.experience.time.delta;
 
-        if (this.mixer) this.mixer.update(deltaTime * 0.01);
+        let effectiveShipVelocity = shipVelocity;
+
+        if (this.gridColumns === 1 && this.chunks.length > 0) 
+        {
+            const limitX = (this.chunkWidth / 4) * 0.99;
+            const currentX = this.chunks[0].position.x;
+
+            const proposedX = currentX - (shipVelocity * deltaTime);
+
+            if (proposedX > limitX) 
+            {
+                const allowedDelta = currentX - limitX;
+                effectiveShipVelocity = allowedDelta / deltaTime;
+            }
+            else if (proposedX < -limitX) 
+            {
+                const allowedDelta = currentX - (-limitX);
+                effectiveShipVelocity = allowedDelta / deltaTime;
+            }
+        }
+
 
         if (this.portal) this.portal.update(deltaTime);
 
-        if (this.activeFloor) { this.activeFloor.update(deltaTime, shipVelocity, forwardSpeed); }
+        if (this.activeFloor) { this.activeFloor.update(deltaTime, effectiveShipVelocity, forwardSpeed); }
+
+        if (this.voidEyeAttacks) { this.voidEyeAttacks.update(deltaTime, effectiveShipVelocity, forwardSpeed); }
 
         const boundaryX = (this.mapTotalWidth / 2);
         const maxXOffset = this.chunkWidth * 0.9;
@@ -219,7 +241,8 @@ export default class Map
         for (const chunk of this.chunks)
         {
             chunk.position.z += forwardSpeed * deltaTime;
-            chunk.position.x -= shipVelocity * deltaTime;
+
+            chunk.position.x -= effectiveShipVelocity * deltaTime;
 
             if (chunk.position.z > this.chunkLength)
             {
@@ -227,7 +250,6 @@ export default class Map
 
                 if (sharedRowOffset === null)
                 {
-                    // special case for void eye theme
                     if (this.gridColumns === 1)
                     {
                         sharedRowOffset = 0;
@@ -245,17 +267,8 @@ export default class Map
                 chunk.children[0].geometry = templateMesh.geometry;
             }
 
-            // special case for void eye theme
-            if (this.gridColumns === 1) 
-            {
-                const limitX = (this.chunkWidth / 2) * 0.99;
-                chunk.position.x = THREE.MathUtils.clamp(chunk.position.x, -limitX, limitX);
-            }
-            else 
-            {
-                if (chunk.position.x < -boundaryX) chunk.position.x += this.mapTotalWidth;
-                else if (chunk.position.x > boundaryX) chunk.position.x -= this.mapTotalWidth;
-            }
+            if (chunk.position.x < -boundaryX) chunk.position.x += this.mapTotalWidth;
+            else if (chunk.position.x > boundaryX) chunk.position.x -= this.mapTotalWidth;
         }
     }
 
@@ -273,6 +286,16 @@ export default class Map
 
         shipCollider.updateMatrixWorld();
         if (!shipCollider.geometry.boundingBox) shipCollider.geometry.computeBoundingBox();
+
+        if (this.voidEyeAttacks)
+        {
+            const collisionPoint = this.voidEyeAttacks.checkCollisions(shipCollider);
+            if (collisionPoint)
+            {
+                this.collisionPoint = collisionPoint;
+                return true;
+            }
+        }
 
         for (const chunk of this.chunks)
         {
@@ -335,7 +358,7 @@ export default class Map
             uFacOffset: { value: 0.1 },
             uColor: { value: new THREE.Color(0.961, 0.592, 0.078) },
             uEnterProgress: { value: 0.0 },
-            uOpacity: { value: 0.0 } // keep it invisible
+            uOpacity: { value: 0.0 }
         };
 
         const material = new THREE.ShaderMaterial({

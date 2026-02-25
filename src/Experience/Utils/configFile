@@ -2,7 +2,7 @@ export const MAP_THEMES = {
   pillar: {
     modelKey: 'pillarScapeModel',
     fog: {
-      color: 0x528ca8,
+      color: '#528ca8', 
       near: 0,
       far: 1000
     },
@@ -14,7 +14,7 @@ export const MAP_THEMES = {
       intensity: 0.4
     },
     directionalLight: {
-      color: 0xf2f2f2,
+      color: '#f2f2f2', 
       intensity: 5,
       position: { x: 520, y: 900, z: -650 }
     },
@@ -22,7 +22,7 @@ export const MAP_THEMES = {
   pyramid: {
     modelKey: 'redApexModel',
     fog: {
-      color: 0x1d0000,
+      color: '#1d0000',
       near: 0,
       far: 1000
     },
@@ -34,7 +34,7 @@ export const MAP_THEMES = {
       intensity: 0.4
     },
     directionalLight: {
-      color: 0x6d0000,
+      color: '#6d0000',
       intensity: 5,
       position: { x: 0, y: 500, z: -1450 }
     },
@@ -42,20 +42,20 @@ export const MAP_THEMES = {
   eye: {
     modelKey: 'handModel',
     fog: {
-      color: 0x000000,
+      color: '#000000',
       near: 0,
       far: 1000
     },
     background: {
       top: '#000000',
-      bottom: '#6f6f6f'
+      bottom: '#000000'
     },
     env: {
       intensity: 0.3
     },
     directionalLight: {
-      color: 0x626262,
-      intensity: 0,
+      color: '#161616', 
+      intensity: 10,
       position: { x: 0, y: 500, z: -1450 }
     },
   }

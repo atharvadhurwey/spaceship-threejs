@@ -249,8 +249,6 @@ export class VoidFloor
     if (this.mesh)
     {
       this.mesh.position.x += -velocity * deltaTime;
-      const limitX = (this.chunkWidth / 4) * 0.99;
-      this.mesh.position.x = THREE.MathUtils.clamp(this.mesh.position.x, -limitX, limitX);
     }
   }
 

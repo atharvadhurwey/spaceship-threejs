@@ -57,8 +57,8 @@ export default class Environment
         }
 
         this.currentTheme = themeKey
-        this.updateGlobalSettings(theme)
 
+        // 1. Instantiate the new theme models FIRST
         if (themeKey === 'pillar')
         {
             this.currentThemeInstance = new PillarScapeTheme(this.experience, this.themeDebugFolder)
@@ -66,15 +66,19 @@ export default class Environment
         else if (themeKey === 'pyramid')
         {
             this.currentThemeInstance = new RedApexTheme(this.experience, this.themeDebugFolder)
-        } else if (themeKey === 'eye')
+        }
+        else if (themeKey === 'eye')
         {
             this.currentThemeInstance = new VoidEyeTheme(this.experience, this.themeDebugFolder)
         }
+
 
         if (this.experience.world.map && this.experience.world.map.updateTheme)
         {
             this.experience.world.map.updateTheme(theme)
         }
+
+        this.updateGlobalSettings(theme)
 
         if (this.debug.active && this.debugFolder)
         {
@@ -84,16 +88,14 @@ export default class Environment
 
     updateGlobalSettings(theme)
     {
-        // Update Fog
         if (this.scene.fog)
         {
-            this.scene.fog.color.setHex(theme.fog.color)
+            this.scene.fog.color.set(theme.fog.color)
             this.scene.fog.near = theme.fog.near
             this.scene.fog.far = theme.fog.far
             if (this.fogParams) Object.assign(this.fogParams, theme.fog)
         }
 
-        // Update Gradient Background
         if (this.bgColors)
         {
             this.bgColors.top = theme.background.top
@@ -101,10 +103,9 @@ export default class Environment
             this.updateBackgroundGradient()
         }
 
-        // Update Sun Light
         if (this.sunLight)
         {
-            this.sunLight.color.setHex(theme.directionalLight.color)
+            this.sunLight.color.set(theme.directionalLight.color)
             this.sunLight.intensity = theme.directionalLight.intensity
             this.sunLight.position.copy(theme.directionalLight.position)
             if (this.sunLightParams)
@@ -115,7 +116,6 @@ export default class Environment
             }
         }
 
-        // Update Env Map
         if (this.environmentMap)
         {
             this.environmentMap.intensity = theme.env.intensity
