@@ -2,6 +2,7 @@ import Experience from '../Experience.js'
 import Environment from './Environment.js'
 import Map from './Map.js'
 import Ship from './Ship.js'
+import LevelManager from '../Utils/LevelManager.js'
 
 export default class World
 {
@@ -18,6 +19,7 @@ export default class World
         this.resources.on('ready', () =>
         {
             // Setup
+            this.levelManager = new LevelManager()
             this.map = new Map()
             this.ship = new Ship()
             this.environment = new Environment()
@@ -29,8 +31,10 @@ export default class World
         if (this.ship && this.map && this.environment)
         {
             this.ship.update()
+            if (this.levelManager) { this.levelManager.update() }
             this.map.update(this.movement.velocity, this.movement.forwardSpeed)
             this.environment.update()
+
 
             if (!this.isResetting && this.ship.collisionsEnabled && this.map.checkCollisions(this.ship.mesh))
             {
@@ -38,6 +42,7 @@ export default class World
 
                 this.ship.explode()
                 this.movement.disable();
+                this.levelManager.stop();
 
                 setTimeout(() => 
                 {
@@ -52,6 +57,7 @@ export default class World
         this.movement.reset();
         this.ship.reset();
         this.map.reset();
+        if (this.levelManager) { this.levelManager.reset(); }
 
         this.isResetting = false;
     }

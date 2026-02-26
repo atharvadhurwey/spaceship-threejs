@@ -6,6 +6,9 @@
 html,
 body {
     overflow: hidden;
+    font-family: "Share Tech Mono", monospace;
+    font-weight: 400;
+    font-style: normal;
 }
 
 .webgl {
@@ -13,4 +16,18 @@ body {
     top: 0;
     left: 0;
     outline: none;
+}
+
+#game-ui {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+
+    color: #ffffff;
+    font-size: 2.5rem;
+    font-weight: bold;
+    letter-spacing: 2px;
 }

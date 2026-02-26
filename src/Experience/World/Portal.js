@@ -50,7 +50,7 @@ export default class Portal
     this.mesh.scale.set(0, 0, 0);
     this.scene.add(this.mesh);
 
-    window.addEventListener('dblclick', this._handleDoubleClick);
+    // window.addEventListener('dblclick', this._handleDoubleClick);
 
     if (this.debug.active) 
     {
@@ -103,6 +103,12 @@ export default class Portal
       const currentThemeInst = this.experience.world.environment.currentThemeInstance;
       const isWater = this.map.activeFloor.name === 'WaterFloor';
       const isSand = this.map.activeFloor.name === 'SandFloor';
+      const isVoid = this.map.activeFloor.name === 'VoidFloor';
+
+      if (isVoid)
+      {
+        // this.map.activeFloor.destroy();
+      }
 
       if (isWater || isSand)
       {
@@ -146,6 +152,8 @@ export default class Portal
         this.mesh.scale.set(0, 0, 0);
         this.mesh.position.set(0, 5, -5);
         this.canExitPortal = false;
+
+        if (this.experience.world.levelManager) { this.experience.world.levelManager.onTransitionComplete(); }
       }
     });
 

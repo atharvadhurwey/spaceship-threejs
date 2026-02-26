@@ -20,6 +20,7 @@ export default class VoidEyeAttacks
     this.chunkLength = chunkLength;
 
     this.activeAttacks = [];
+    this.activeTimers = [];
 
     // Reusable materials/geometries
     this.cubeGeo = new THREE.BoxGeometry(10, 10, 10);
@@ -51,11 +52,6 @@ export default class VoidEyeAttacks
     this.lastAttackType = null;
 
     this.createHand();
-
-    setTimeout(() =>
-    {
-      this.startAttacking();
-    }, 3000);
 
     window.addEventListener('keydown', (e) =>
     {
@@ -139,10 +135,10 @@ export default class VoidEyeAttacks
 
 
     const attacks = [
-      { type: 'walls', delayAfter: 4.5 },
+      { type: 'walls', delayAfter: 5.5 },
       { type: 'beams', delayAfter: 4.0 },
-      { type: 'spikes', delayAfter: 5.0 },
-      { type: 'upSideDown', delayAfter: 3.5 }
+      { type: 'spikes', delayAfter: 6.5 },
+      // { type: 'upSideDown', delayAfter: 3.5 }
     ];
 
     const availableAttacks = attacks.filter(attack => attack.type !== this.lastAttackType);
@@ -156,24 +152,24 @@ export default class VoidEyeAttacks
     {
       case 'walls':
         this.spawnBatch([
-          { type: 'wall', x: -75, z: -this.chunkLength * 0.45 },
-          { type: 'wall', x: -25, z: -this.chunkLength * 0.45 },
-          { type: 'wall', x: 25, z: -this.chunkLength * 0.45 },
-          { type: 'wall', x: 75, z: -this.chunkLength * 0.45 },
-          { type: 'wall', x: -50, z: -this.chunkLength * 0.5 },
-          { type: 'wall', x: 0, z: -this.chunkLength * 0.5 },
-          { type: 'wall', x: 50, z: -this.chunkLength * 0.5 },
-          { type: 'wall', x: -75, z: -this.chunkLength * 0.55 },
-          { type: 'wall', x: -25, z: -this.chunkLength * 0.55 },
-          { type: 'wall', x: 25, z: -this.chunkLength * 0.55 },
-          { type: 'wall', x: 75, z: -this.chunkLength * 0.55 },
-          { type: 'wall', x: -50, z: -this.chunkLength * 0.6 },
-          { type: 'wall', x: 0, z: -this.chunkLength * 0.6 },
-          { type: 'wall', x: 50, z: -this.chunkLength * 0.6 },
-          { type: 'wall', x: -75, z: -this.chunkLength * 0.65 },
-          { type: 'wall', x: -25, z: -this.chunkLength * 0.65 },
-          { type: 'wall', x: 25, z: -this.chunkLength * 0.65 },
-          { type: 'wall', x: 75, z: -this.chunkLength * 0.65 },
+          { type: 'wall', x: -75, z: -this.chunkLength * 0.4 },
+          { type: 'wall', x: -25, z: -this.chunkLength * 0.4 },
+          { type: 'wall', x: 25, z: -this.chunkLength * 0.4 },
+          { type: 'wall', x: 75, z: -this.chunkLength * 0.4 },
+          { type: 'wall', x: -50, z: -this.chunkLength * 0.45 },
+          { type: 'wall', x: 0, z: -this.chunkLength * 0.45 },
+          { type: 'wall', x: 50, z: -this.chunkLength * 0.45 },
+          { type: 'wall', x: -75, z: -this.chunkLength * 0.5 },
+          { type: 'wall', x: -25, z: -this.chunkLength * 0.5 },
+          { type: 'wall', x: 25, z: -this.chunkLength * 0.5 },
+          { type: 'wall', x: 75, z: -this.chunkLength * 0.5 },
+          { type: 'wall', x: -50, z: -this.chunkLength * 0.55 },
+          { type: 'wall', x: 0, z: -this.chunkLength * 0.55 },
+          { type: 'wall', x: 50, z: -this.chunkLength * 0.55 },
+          { type: 'wall', x: -75, z: -this.chunkLength * 0.6 },
+          { type: 'wall', x: -25, z: -this.chunkLength * 0.6 },
+          { type: 'wall', x: 25, z: -this.chunkLength * 0.6 },
+          { type: 'wall', x: 75, z: -this.chunkLength * 0.6 },
         ]);
         break;
 
@@ -355,7 +351,7 @@ export default class VoidEyeAttacks
       const baseDelay = 1.5;
       const delay = baseDelay + (i * 0.08);
 
-      gsap.delayedCall(delay, () => 
+      const spikeTimer = gsap.delayedCall(delay, () => 
       {
         if (this.isDestroyed || !mesh.parent) return;
         const targetY = 20 + (Math.random() * 20);
@@ -366,6 +362,7 @@ export default class VoidEyeAttacks
           ease: "back.out(1.2)"
         });
       });
+      this.activeTimers.push(spikeTimer);
     }
   }
 
@@ -379,11 +376,12 @@ export default class VoidEyeAttacks
     this.scene.add(mesh);
     this.activeAttacks.push({ mesh, type: 'wall' });
 
-    gsap.delayedCall(1.5, () =>
+    const wallTimer = gsap.delayedCall(1.5, () =>
     {
       if (this.isDestroyed || !mesh.parent) return;
       gsap.to(mesh.position, { y: 30, duration: 1.5, ease: "power2.out" });
     });
+    this.activeTimers.push(wallTimer);
   }
 
   spawnBeams()
@@ -394,7 +392,7 @@ export default class VoidEyeAttacks
     const totalShots = 4;
     const shotDelay = 0.5;
     const trackingWarningTime = 0.5;
-    const chargeDuration = 2.0;
+    const chargeDuration = 2.5;
 
     const offsets = [
       new THREE.Vector3(-150, -5, 0),
@@ -416,13 +414,14 @@ export default class VoidEyeAttacks
       chargeOrb.scale.set(0, 0, 0);
       this.scene.add(chargeOrb);
 
-      gsap.delayedCall(i * shotDelay, () => 
+      const chargeTimer = gsap.delayedCall(i * shotDelay, () => 
       {
         if (this.isDestroyed) return;
         gsap.to(chargeOrb.scale, { x: 12, y: 12, z: 12, duration: chargeDuration, ease: "power2.in" });
       });
+      this.activeTimers.push(chargeTimer);
 
-      gsap.delayedCall(chargeDuration + (i * shotDelay), () => 
+      const shotTimer = gsap.delayedCall(chargeDuration + (i * shotDelay), () => 
       {
         if (this.isDestroyed) return;
 
@@ -433,7 +432,7 @@ export default class VoidEyeAttacks
         const trackerObj = { mesh: tracker, type: 'tracker' };
         this.activeAttacks.push(trackerObj);
 
-        gsap.delayedCall(trackingWarningTime, () => 
+        const trackingTimer = gsap.delayedCall(trackingWarningTime, () => 
         {
           if (this.isDestroyed) return;
 
@@ -480,7 +479,10 @@ export default class VoidEyeAttacks
             }
           });
         });
+        this.activeTimers.push(trackingTimer);
       });
+      this.activeTimers.push(shotTimer);
+
     }
   }
 
@@ -590,6 +592,7 @@ export default class VoidEyeAttacks
   {
     this.stopAttacking();
     this.isDestroyed = true;
+    this.clearAllTimers()
 
     if (this.mixer) 
     {
@@ -654,6 +657,7 @@ export default class VoidEyeAttacks
     this.stopAttacking();
     this.isDestroyed = false;
     this.lastAttackType = null;
+    this.clearAllTimers()
 
     this.experience.camera.reset();
 
@@ -665,7 +669,7 @@ export default class VoidEyeAttacks
 
     gsap.killTweensOf(this.handModel.scene.position);
     gsap.killTweensOf(this.handModel.scene.rotation);
-    this.handModel.scene.position.set(0, 120, -600); 
+    this.handModel.scene.position.set(0, 120, -600);
     this.handModel.scene.rotation.set(0, 0, 0);
 
     for (const attack of this.activeAttacks)
@@ -696,5 +700,26 @@ export default class VoidEyeAttacks
         this.scene.remove(child);
       }
     }
+
+    setTimeout(() =>
+    {
+      this.startAttacking();
+    }, 3000);
+  }
+
+  clearAllTimers()
+  {
+    if (this.nextAttackTimer)
+    {
+      this.nextAttackTimer.kill();
+      this.nextAttackTimer = null;
+    }
+
+    for (const timer of this.activeTimers)
+    {
+      timer.kill();
+    }
+
+    this.activeTimers = [];
   }
 }

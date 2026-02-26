@@ -5,17 +5,18 @@ uniform float uHeightOffset;
 uniform float uBaseWidth;
 uniform float uSlope;
 uniform vec3 uSandColor;
-
-// New uniforms for the split
 uniform float uSplitLevel;
 uniform float uSplitGap;
+
+uniform float uTime;
+uniform float uRotationSpeed;
+uniform float uRotationAngle;
 
 mat2 rot(float a) {
     float s = sin(a), c = cos(a);
     return mat2(c, -s, s, c);
 }
 
-// Extracted the core pyramid shape math into its own function
 float getPyramidBase(vec3 p) {
     p.xz *= rot(uAngle); 
     
@@ -30,17 +31,21 @@ float getPyramidBase(vec3 p) {
 }
 
 float sdPyramid(vec3 p) {
-    // Apply the global height offset first so the split moves with it
     p.y += uHeightOffset; 
     
     float splitY = uSplitLevel;
     
-    // 1. Bottom Half: Base shape, cut off everything above splitY
+    // 1. Bottom Half: Base shape
     float dBottom = max(getPyramidBase(p), p.y - splitY);
     
-    // 2. Top Half: Shift space down to push the geometry up
+    // 2. Top Half: Shift space down
     vec3 pShifted = p;
     pShifted.y -= uSplitGap;
+    
+    // NEW: Rotate the top half's XZ coordinates based on time and speed
+    // We do this before calculating the shape, but because Y is untouched, 
+    // the horizontal slice plane remains perfectly aligned.
+    pShifted.xz *= rot(uRotationAngle);
     
     // Cut off everything below splitY in the shifted space
     float dTop = max(getPyramidBase(pShifted), -(pShifted.y - splitY));
@@ -59,6 +64,7 @@ vec3 getNormal(vec3 p) {
 }
 
 void main() {
+    // ... [Keep your existing main() function exactly as is] ...
     vec2 uv = (vUv - 0.5) * 2.0;
 
     vec3 ro = vec3(0.0, 1.0, 6.0);

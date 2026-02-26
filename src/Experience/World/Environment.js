@@ -30,7 +30,7 @@ export default class Environment
         this.setGradientBackground()
         this.setFog()
 
-        this.switchTheme('pillar')
+        this.switchTheme('pillar');
 
         if (this.debug.active)
         {

@@ -56,18 +56,19 @@ export default class Map
 
         this.noOfColumns = 3;
 
-        if (theme.modelKey === 'pillarScapeModel')
+        if (theme.modelKey === 'pillarScape')
         {
             const terrainData = TerrainGenerator.build(
                 this.resources.items.pillarScapeModel.scene,
-                ['area1', 'area2', 'area3'],
+                ['area2', 'area3'],
                 { top: '#ffffff', bottom: '#bec1a4', maxY: 26 },
                 this.debugFolder
             );
             this._applyTerrainData(terrainData);
             this.activeFloor = new WaterFloor(this.scene, this.debug, this.resources, this.chunkWidth, this.chunkLength);
+            this.experience.world.levelManager.setTimerForMap('pillarScape');
         }
-        else if (theme.modelKey === 'redApexModel')
+        else if (theme.modelKey === 'redApex')
         {
             const terrainData = TerrainGenerator.build(
                 this.resources.items.redApexModel.scene,
@@ -77,7 +78,8 @@ export default class Map
             );
             this._applyTerrainData(terrainData);
             this.activeFloor = new SandFloor(this.scene, this.debug, this.chunkWidth);
-        } else if (theme.modelKey === 'handModel')
+            this.experience.world.levelManager.setTimerForMap('redApex');
+        } else if (theme.modelKey === 'voidEye')
         {
             const tempGeo = new THREE.PlaneGeometry(1, 1, 1, 1);
             const tempMat = new THREE.MeshStandardMaterial({
@@ -101,6 +103,7 @@ export default class Map
             this.noOfColumns = 1
             this.activeFloor = new VoidFloor(this.scene, this.debug, this.resources, this.chunkWidth, this.chunkLength);
             this.voidEyeAttacks = new VoidEyeAttacks(this.scene, this.chunkWidth, this.chunkLength);
+            this.experience.world.levelManager.setTimerForMap('voidEye');
         }
 
         this.reset();
@@ -163,6 +166,7 @@ export default class Map
     {
         for (const chunk of this.chunks) this.scene.remove(chunk);
         if (this.voidEyeAttacks) this.voidEyeAttacks.reset();
+        if (this.experience.world.levelManager) this.experience.world.levelManager.reset();
         this.chunks = [];
         this._shipColliderCache = null;
         this.createInfiniteMap();

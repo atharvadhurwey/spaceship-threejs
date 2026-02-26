@@ -193,7 +193,7 @@ export class VoidFloor
     this.resources = resources;
     this.chunkWidth = chunkWidth;
     this.chunkLength = chunkLength;
-    this.name = 'SimpleFloor';
+    this.name = 'VoidFloor';
 
     this.params = {
       color: '#1a1a1a',

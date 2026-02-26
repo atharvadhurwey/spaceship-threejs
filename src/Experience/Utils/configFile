@@ -1,6 +1,6 @@
 export const MAP_THEMES = {
   pillar: {
-    modelKey: 'pillarScapeModel',
+    modelKey: 'pillarScape',
     fog: {
       color: '#528ca8', 
       near: 0,
@@ -20,7 +20,7 @@ export const MAP_THEMES = {
     },
   },
   pyramid: {
-    modelKey: 'redApexModel',
+    modelKey: 'redApex',
     fog: {
       color: '#1d0000',
       near: 0,
@@ -40,7 +40,7 @@ export const MAP_THEMES = {
     },
   },
   eye: {
-    modelKey: 'handModel',
+    modelKey: 'voidEye',
     fog: {
       color: '#000000',
       near: 0,

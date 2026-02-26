@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import gsap from 'gsap';
 
 import redSunVertShader from '../../Shaders/RedSun/vert.glsl';
 import redSunFragShader from '../../Shaders/RedSun/frag.glsl';
@@ -8,6 +9,8 @@ import mountainFragShader from '../../Shaders/Mountains/frag.glsl';
 
 import pyramidVertShader from '../../Shaders/Pyramid/vert.glsl';
 import pyramidFragShader from '../../Shaders/Pyramid/frag.glsl';
+
+import { MAP_THEMES } from '../configFile'
 
 export default class RedApexTheme 
 {
@@ -165,7 +168,8 @@ export default class RedApexTheme
       splitGap: 0.27,
       dir: { x: 0, y: 17, z: -1450 },
       width: 1000,
-      height: 2000
+      height: 2000,
+      rotationSpeed: 0.0
     };
 
     const pyramidGeo = new THREE.PlaneGeometry(this.pyramidParams.width, this.pyramidParams.height, 1, 1);
@@ -179,7 +183,10 @@ export default class RedApexTheme
         uSlope: { value: this.pyramidParams.slope },
         uSandColor: { value: new THREE.Color(this.pyramidParams.color) },
         uSplitLevel: { value: this.pyramidParams.splitLevel },
-        uSplitGap: { value: this.pyramidParams.splitGap }
+        uSplitGap: { value: this.pyramidParams.splitGap },
+        uTime: { value: 0.0 },
+        uRotationSpeed: { value: this.pyramidParams.rotationSpeed },
+        uRotationAngle: { value: 0.0 }
       },
       transparent: true
     });
@@ -236,10 +243,102 @@ export default class RedApexTheme
       pyramidFolder.addBinding(this.pyramidParams, 'color', {
         view: 'color', label: 'Sand Color'
       }).on('change', (ev) => { this.pyramid.material.uniforms.uSandColor.value.set(ev.value); });
+
+      pyramidFolder.addBinding(this.pyramidParams, 'rotationSpeed', {
+        min: 0, max: 50.0, label: 'Rotation Speed'
+      }).on('change', (ev) =>
+      {
+        this.pyramid.material.uniforms.uRotationSpeed.value = ev.value;
+      });
     }
   }
 
-  update() { }
+  triggerRedApexEvent(targetSpeed, duration = 2.0)
+  {
+    const tl = gsap.timeline();
+
+    tl.to(this.pyramidParams, {
+      rotationSpeed: targetSpeed,
+      duration: duration,
+      ease: "none",
+      onUpdate: () =>
+      {
+        this.pyramid.material.uniforms.uRotationSpeed.value = this.pyramidParams.rotationSpeed;
+      }
+    }, 0);
+
+    if (this.scene && this.scene.fog)
+    {
+      tl.to(this.scene.fog, {
+        far: 300,
+        duration: duration,
+        ease: "none"
+      }, 0);
+
+    }
+  }
+
+  resetPyramid()
+  {
+    gsap.killTweensOf(this.pyramidParams);
+
+    if (this.scene && this.scene.fog) this.scene.fog.far = MAP_THEMES.pyramid.fog.far
+
+    if (this.pyramid)
+    {
+      this.group.remove(this.pyramid);
+
+      this.pyramid.geometry.dispose();
+      this.pyramid.material.dispose();
+    }
+
+    this.pyramidParams = {
+      angle: 2.1,
+      heightOffset: 0.0,
+      baseWidth: 1.67,
+      slope: 0.4,
+      color: '#b40000',
+      splitLevel: 1.74,
+      splitGap: 0.27,
+      dir: { x: 0, y: 17, z: -1450 },
+      width: 1000,
+      height: 2000,
+      rotationSpeed: 0.0
+    };
+
+    const pyramidGeo = new THREE.PlaneGeometry(this.pyramidParams.width, this.pyramidParams.height, 1, 1);
+    const pyramidMat = new THREE.ShaderMaterial({
+      vertexShader: pyramidVertShader,
+      fragmentShader: pyramidFragShader,
+      uniforms: {
+        uAngle: { value: this.pyramidParams.angle },
+        uHeightOffset: { value: this.pyramidParams.heightOffset },
+        uBaseWidth: { value: this.pyramidParams.baseWidth },
+        uSlope: { value: this.pyramidParams.slope },
+        uSandColor: { value: new THREE.Color(this.pyramidParams.color) },
+        uSplitLevel: { value: this.pyramidParams.splitLevel },
+        uSplitGap: { value: this.pyramidParams.splitGap },
+        uTime: { value: 0.0 },
+        uRotationSpeed: { value: this.pyramidParams.rotationSpeed },
+        uRotationAngle: { value: 0.0 }
+      },
+      transparent: true
+    });
+
+    this.pyramid = new THREE.Mesh(pyramidGeo, pyramidMat);
+    this.pyramid.position.set(this.pyramidParams.dir.x, this.pyramidParams.dir.y, this.pyramidParams.dir.z);
+    this.group.add(this.pyramid);
+
+    this.currentAngle = 0;
+  }
+
+  update()
+  {
+    const deltaTime = this.experience.time.delta
+
+    this.currentAngle = (this.currentAngle || 0) + (this.pyramidParams.rotationSpeed * deltaTime * 0.01);
+    this.pyramid.material.uniforms.uRotationAngle.value = this.currentAngle;
+  }
 
   dispose()
   {
