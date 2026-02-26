@@ -13,8 +13,8 @@ export default class World
         this.movement = this.experience.movement
         this.resources = this.experience.resources
 
-        // 1. Add a flag to prevent multiple collision triggers
         this.isResetting = false
+        this.isStarted = false
 
         this.resources.on('ready', () =>
         {
@@ -23,7 +23,26 @@ export default class World
             this.map = new Map()
             this.ship = new Ship()
             this.environment = new Environment()
+            this.setupInstructions()
         })
+    }
+
+    setupInstructions()
+    {
+        const instructionScreen = document.getElementById('instruction-screen')
+        const startButton = document.getElementById('start-button')
+
+        if (startButton)
+        {
+            startButton.disabled = false
+            startButton.innerText = 'Start Game'
+
+            startButton.addEventListener('click', () => 
+            {
+                instructionScreen.classList.add('hidden')
+                this.isStarted = true
+            })
+        }
     }
 
     update()
@@ -31,23 +50,26 @@ export default class World
         if (this.ship && this.map && this.environment)
         {
             this.ship.update()
-            if (this.levelManager) { this.levelManager.update() }
-            this.map.update(this.movement.velocity, this.movement.forwardSpeed)
             this.environment.update()
 
-
-            if (!this.isResetting && this.ship.collisionsEnabled && this.map.checkCollisions(this.ship.mesh))
+            if (this.isStarted) 
             {
-                this.isResetting = true
+                if (this.levelManager) { this.levelManager.update() }
+                this.map.update(this.movement.velocity, this.movement.forwardSpeed)
 
-                this.ship.explode()
-                this.movement.disable();
-                this.levelManager.stop();
-
-                setTimeout(() => 
+                if (!this.isResetting && this.ship.collisionsEnabled && this.map.checkCollisions(this.ship.mesh))
                 {
-                    this.reset();
-                }, 3000);
+                    this.isResetting = true
+
+                    this.ship.explode()
+                    this.movement.disable();
+                    this.levelManager.stop();
+
+                    setTimeout(() => 
+                    {
+                        this.reset();
+                    }, 3000);
+                }
             }
         }
     }

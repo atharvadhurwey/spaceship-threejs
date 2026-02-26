@@ -165,7 +165,11 @@ export default class Map
     reset()
     {
         for (const chunk of this.chunks) this.scene.remove(chunk);
-        if (this.voidEyeAttacks) this.voidEyeAttacks.reset();
+        if (this.voidEyeAttacks)
+        {
+            this.activeFloor.reset();
+            this.voidEyeAttacks.reset();
+        }
         if (this.experience.world.levelManager) this.experience.world.levelManager.reset();
         this.chunks = [];
         this._shipColliderCache = null;

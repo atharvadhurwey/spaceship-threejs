@@ -270,7 +270,7 @@ export default class RedApexTheme
     if (this.scene && this.scene.fog)
     {
       tl.to(this.scene.fog, {
-        far: 300,
+        far: 250,
         duration: duration,
         ease: "none"
       }, 0);

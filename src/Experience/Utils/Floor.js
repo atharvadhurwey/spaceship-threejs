@@ -252,6 +252,10 @@ export class VoidFloor
     }
   }
 
+  reset() {
+    this.mesh.position.x = 0;
+  }
+
   destroy()
   {
     this.scene.remove(this.mesh);

@@ -9,7 +9,7 @@ export default class Movement
         this.currentSpeed = 0;
         this.input = { left: false, right: false };
 
-        this.forwardSpeed = 2.5;
+        this.forwardSpeed = 2;
         this.maxSpeed = 1.5
         this.turnSpeed = 0.05;
         this.friction = 0.92;

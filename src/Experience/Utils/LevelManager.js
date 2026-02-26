@@ -9,8 +9,8 @@ export default class LevelManager
 
     this.survivalTimes = {
       'pillarScape': 3000,
-      'redApex': 4500,
-      'voidEye': 6000
+      'redApex': 3000,
+      'voidEye': 4500
     }
 
     this.currentMapName = 'pillarScape';
@@ -22,6 +22,7 @@ export default class LevelManager
     this.timerElement = document.getElementById('timer-display');
 
     this.hasFiredRedApexEvent = false;
+    this.hasFiredVoidEyeEvent = false;
   }
 
   setTimerForMap(mapName)
@@ -61,6 +62,12 @@ export default class LevelManager
       this.hasFiredRedApexEvent = true;
     }
 
+    if (this.currentMapName === 'voidEye' && currentDisplayTime === 43 && !this.hadFiredVoidEyeEvent)
+    {
+      this.voidEyeEvent();
+      this.hadFiredVoidEyeEvent = true;
+    }
+
     this.updateTimerUI(remainingTime);
 
     if (this.elapsedTime >= this.targetSurvivalTime)
@@ -72,6 +79,12 @@ export default class LevelManager
   redApexEvent()
   {
     this.experience.world.environment.currentThemeInstance.triggerRedApexEvent(5, 10);
+  }
+
+  voidEyeEvent()
+  {
+    console.log('ok')
+    // this.experience.world.environment.currentThemeInstance.triggerVoidEyeEvent(5, 10);
   }
 
   updateTimerUI(timeInMs)
@@ -99,6 +112,7 @@ export default class LevelManager
     this.elapsedTime = 0;
 
     this.hasFiredRedApexEvent = false;
+    this.hadFiredVoidEyeEvent = false;
   }
 
   stop()
@@ -117,6 +131,9 @@ export default class LevelManager
 
     if (this.hasFiredRedApexEvent) this.experience.world.environment.currentThemeInstance.resetPyramid()
     this.hasFiredRedApexEvent = false;
+
+    // if (this.hadFiredVoidEyeEvent) this.experience.world.environment.currentThemeInstance.resetEye()
+    this.hadFiredVoidEyeEvent = false;
 
     this.updateTimerUI(this.targetSurvivalTime);
   }
