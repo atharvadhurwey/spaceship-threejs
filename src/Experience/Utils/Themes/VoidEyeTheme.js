@@ -10,6 +10,7 @@ export default class VoidEyeTheme
 {
   constructor(experience, parentDebugFolder)
   {
+    this.name = 'voidEyeTheme'
     this.experience = experience
     this.scene = experience.scene
     this.resources = experience.resources

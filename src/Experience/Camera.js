@@ -8,6 +8,7 @@ export default class Camera
     constructor()
     {
         this.experience = new Experience()
+        this.debug = this.experience.debug
         this.sizes = this.experience.sizes
         this.scene = this.experience.scene
         this.canvas = this.experience.canvas
@@ -48,7 +49,8 @@ export default class Camera
         })
     }
 
-    reset() {
+    reset()
+    {
         this.instance.position.set(0, 6, 22)
         this.controls.target.set(0, 7, 0)
         this.instance.up.set(0, 1, 0)
@@ -60,6 +62,13 @@ export default class Camera
         this.controls = new OrbitControls(this.instance, this.canvas)
         this.controls.enableDamping = true
         this.controls.target.set(0, 7, 0)
+        if (!this.debug.active)
+        {
+
+            this.controls.enablePan = false
+            this.controls.enableRotate = false
+            this.controls.enableZoom = false
+        }
         this.controls.update()
     }
 

@@ -4,6 +4,7 @@ export default class PillarScapeTheme
 {
   constructor(experience, parentDebugFolder)
   {
+    this.name = 'pillarScapeTheme'
     this.experience = experience
     this.scene = experience.scene
     this.resources = experience.resources

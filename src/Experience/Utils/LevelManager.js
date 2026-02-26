@@ -62,7 +62,7 @@ export default class LevelManager
       this.hasFiredRedApexEvent = true;
     }
 
-    if (this.currentMapName === 'voidEye' && currentDisplayTime === 43 && !this.hadFiredVoidEyeEvent)
+    if (this.currentMapName === 'voidEye' && currentDisplayTime === 25 && !this.hadFiredVoidEyeEvent)
     {
       this.voidEyeEvent();
       this.hadFiredVoidEyeEvent = true;
@@ -83,7 +83,7 @@ export default class LevelManager
 
   voidEyeEvent()
   {
-    console.log('ok')
+    // console.log('ok')
     // this.experience.world.environment.currentThemeInstance.triggerVoidEyeEvent(5, 10);
   }
 
@@ -129,7 +129,7 @@ export default class LevelManager
     this.elapsedTime = 0;
     this.isTransitioning = false;
 
-    if (this.hasFiredRedApexEvent) this.experience.world.environment.currentThemeInstance.resetPyramid()
+    if (this.hasFiredRedApexEvent && this.experience.world.environment.currentThemeInstance.name == 'redApexTheme') this.experience.world.environment.currentThemeInstance.resetPyramid()
     this.hasFiredRedApexEvent = false;
 
     // if (this.hadFiredVoidEyeEvent) this.experience.world.environment.currentThemeInstance.resetEye()

@@ -13,16 +13,25 @@
     </head>
     <body>
         <canvas class="webgl"></canvas>
+
         <div id="game-ui">
             <div id="timer-display"></div>
         </div>
+
         <div id="instruction-screen" class="overlay">
-            <h1>Yooooooooooo</h1>
+            <h1 style="color: orange">Yooooooooooo</h1>
             <p>This is a <s>In</s>finite Runner Game</p>
             <p>survive each map for the given amount of time and WIN!!!</p>
             <p>Instructions: Use A-D or Arrow Keys to move.</p>
             <button id="start-button" disabled>Loading...</button>
         </div>
+
+        <div class="end-credits-screen">
+            <h1>Thank You For Playing</h1>
+            <p>Created by Atharva Dhurwey | <a href="https://github.com/atharvadhurwey" target="_blank" style="color: orange; text-decoration: none">Github</a></p>
+            <!-- <button onclick="location.reload()">Play Again</button> -->
+        </div>
+
         <script type="module" src="./script.js"></script>
     </body>
 </html>

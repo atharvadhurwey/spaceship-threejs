@@ -14,8 +14,9 @@ export default class Portal
     this.debug = this.experience.debug;
 
     this.canExitPortal = false;
+    this.isGameEnding = false;
 
-    this._handleDoubleClick = this.enter.bind(this);
+    this._handlePortalCheat = this.enter.bind(this);
     this._updateCameraProjection = () => this.camera.updateProjectionMatrix();
 
     this.init();
@@ -50,7 +51,7 @@ export default class Portal
     this.mesh.scale.set(0, 0, 0);
     this.scene.add(this.mesh);
 
-    // window.addEventListener('dblclick', this._handleDoubleClick);
+    window.addEventListener('keydown', (event) => { if (event.key === 'p') { this._handlePortalCheat() } });
 
     if (this.debug.active) 
     {
@@ -79,11 +80,16 @@ export default class Portal
 
     if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() }
 
+    this.isGameEnding = this.map.activeFloor && this.map.activeFloor.name === 'VoidFloor';
+
     const tl = gsap.timeline({
       onComplete: () =>
       {
         this.canExitPortal = true;
-        setTimeout(() => this.exit(), 2000);
+        if (!this.isGameEnding)
+        {
+          setTimeout(() => this.exit(), 2000);
+        }
       }
     });
 
@@ -103,11 +109,11 @@ export default class Portal
       const currentThemeInst = this.experience.world.environment.currentThemeInstance;
       const isWater = this.map.activeFloor.name === 'WaterFloor';
       const isSand = this.map.activeFloor.name === 'SandFloor';
-      const isVoid = this.map.activeFloor.name === 'VoidFloor';
 
-      if (isVoid)
+      if (this.isGameEnding)
       {
-        // this.map.activeFloor.destroy();
+        this.map.activeFloor.destroy();
+        this.map.clearCurrentEnvironment();
       }
 
       if (isWater || isSand)
@@ -134,6 +140,19 @@ export default class Portal
       onUpdate: this._updateCameraProjection
     }, 0);
     tl.to(this.uniforms.uFacOffset, { value: 0.0, duration: 0.8, ease: "power2.outIn" }, 0);
+
+    if (this.isGameEnding) 
+    {
+      const creditsScreen = document.querySelector('.end-credits-screen');
+      if (creditsScreen) 
+      {
+        tl.fromTo(creditsScreen,
+          { opacity: 0, display: 'none' },
+          { opacity: 1, display: 'flex', duration: 2.0, ease: 'power2.inOut' },
+          1.0
+        );
+      }
+    }
   }
 
   exit() 
@@ -219,7 +238,7 @@ export default class Portal
 
   dispose() 
   {
-    window.removeEventListener('dblclick', this._handleDoubleClick);
+    window.removeEventListener('keydown', (event) => { if (event.key === 'p') { this._handlePortalCheat() } });
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
     this.scene.remove(this.mesh);

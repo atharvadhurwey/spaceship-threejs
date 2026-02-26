@@ -16,6 +16,7 @@ export default class RedApexTheme
 {
   constructor(experience, parentDebugFolder)
   {
+    this.name = 'redApexTheme'
     this.experience = experience
     this.scene = experience.scene
     this.resources = experience.resources
@@ -282,7 +283,11 @@ export default class RedApexTheme
   {
     gsap.killTweensOf(this.pyramidParams);
 
-    if (this.scene && this.scene.fog) this.scene.fog.far = MAP_THEMES.pyramid.fog.far
+    if (this.scene && this.scene.fog)
+    {
+      gsap.killTweensOf(this.scene.fog);
+      this.scene.fog.far = MAP_THEMES.pyramid.fog.far;
+    }
 
     if (this.pyramid)
     {
