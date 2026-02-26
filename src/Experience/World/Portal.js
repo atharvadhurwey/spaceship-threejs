@@ -80,6 +80,8 @@ export default class Portal
 
     if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() }
 
+    if (this.experience.world.levelManager) { this.experience.world.levelManager.isTransitioning = true; }
+
     this.isGameEnding = this.map.activeFloor && this.map.activeFloor.name === 'VoidFloor';
 
     const tl = gsap.timeline({
@@ -116,14 +118,22 @@ export default class Portal
         this.map.clearCurrentEnvironment();
       }
 
+      this.mesh.material.uniforms.uColor.value.set('#000000');
+
       if (isWater || isSand)
       {
         currentThemeInst.planetBackground.visible = false;
-        if (isWater) currentThemeInst.cloudMesh.visible = false;
+
+        if (isWater)
+        {
+          currentThemeInst.clouds.visible = false;
+          this.mesh.material.uniforms.uColor.value.set('#ff0000');
+        }
         if (isSand)
         {
           currentThemeInst.backgroundScreen.visible = false;
           currentThemeInst.pyramid.visible = false;
+          this.mesh.material.uniforms.uColor.value.set('#ffffff');
         }
 
         this.map.activeFloor.mesh.material.depthTest = false;
@@ -216,7 +226,7 @@ export default class Portal
         tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 0 }, { value: 1.0, duration: 0.5, ease: "power2.outIn" }, 0);
         fadeInTarget(currentThemeInst.planetBackground, 2.0);
 
-        if (isWater) fadeInTarget(currentThemeInst.cloudMesh, 2.0);
+        if (isWater) fadeInTarget(currentThemeInst.clouds, 2.0);
         if (isSand)
         {
           fadeInTarget(currentThemeInst.backgroundScreen, 2.0);

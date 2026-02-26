@@ -31,7 +31,6 @@ export default class VoidEyeAttacks
 
     this.wallGeo = new THREE.BoxGeometry(30, 60, 5);
     this.wallMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.9, metalness: 0.2 });
-    this.wallMat.castShadow = true;
 
     this.energyGeo = new THREE.SphereGeometry(2, 16, 16);
     this.energyMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -42,7 +41,7 @@ export default class VoidEyeAttacks
 
     this.spikeGeo = new THREE.ConeGeometry(8, 120, 16);
     this.spikeGeo.computeBoundsTree();
-    this.spikeMat = new THREE.MeshStandardMaterial({ color: 0x550000, roughness: 0.3, metalness: 0.8 });
+    this.spikeMat = new THREE.MeshStandardMaterial({ color: 0x9D9D9D, roughness: 0.3, metalness: 0.8 });
 
     this.box3 = new THREE.Box3();
 
@@ -50,6 +49,7 @@ export default class VoidEyeAttacks
     this.isUpsideDown = true;
     this.isAttacking = false;
     this.lastAttackType = null;
+    this.forceNextAttack = null;
 
     this.createHand();
 
@@ -113,6 +113,11 @@ export default class VoidEyeAttacks
     });
   }
 
+  triggerVoidEyeEvent()
+  {
+    this.forceNextAttack = 'upSideDown';
+  }
+
   startAttacking()
   {
     this.isAttacking = true;
@@ -133,22 +138,29 @@ export default class VoidEyeAttacks
   {
     if (this.isDestroyed || !this.isAttacking) return;
 
+    let chosenAttack;
 
-    const attacks = [
-      { type: 'walls', delayAfter: 5.5 },
-      { type: 'beams', delayAfter: 4.0 },
-      { type: 'spikes', delayAfter: 6.5 },
-      // { type: 'upSideDown', delayAfter: 3.5 }
-    ];
+    if (this.forceNextAttack) 
+    {
+      chosenAttack = { type: this.forceNextAttack, delayAfter: 3.5 };
+      this.forceNextAttack = null;
+    }
+    else 
+    {
+      const attacks = [
+        { type: 'walls', delayAfter: 5.5 },
+        { type: 'beams', delayAfter: 4.0 },
+        { type: 'spikes', delayAfter: 6.5 },
+        // { type: 'upSideDown', delayAfter: 3.5 }
+      ];
 
-    const availableAttacks = attacks.filter(attack => attack.type !== this.lastAttackType);
+      const availableAttacks = attacks.filter(attack => attack.type !== this.lastAttackType);
+      chosenAttack = availableAttacks[Math.floor(Math.random() * availableAttacks.length)];
+    }
 
-    const randomAttack = availableAttacks[Math.floor(Math.random() * availableAttacks.length)];
+    this.lastAttackType = chosenAttack.type;
 
-    this.lastAttackType = randomAttack.type;
-
-    // Execute the chosen attack
-    switch (randomAttack.type)
+    switch (chosenAttack.type)
     {
       case 'walls':
         this.spawnBatch([
@@ -199,8 +211,7 @@ export default class VoidEyeAttacks
         break;
     }
 
-    // Schedule the next attack using the current attack's specific delay
-    this.nextAttackTimer = gsap.delayedCall(randomAttack.delayAfter, () => 
+    this.nextAttackTimer = gsap.delayedCall(chosenAttack.delayAfter, () => 
     {
       this.triggerRandomAttack();
     });
@@ -335,6 +346,7 @@ export default class VoidEyeAttacks
     for (let i = 0; i < numSpikes; i++) 
     {
       const mesh = new THREE.Mesh(this.spikeGeo, this.spikeMat);
+      mesh.castShadow = true;
 
       const x = startX + (i * spacing) + (Math.random() * 15 - 7.5);
       const z = centerZ + (Math.random() * 20 - 10);
@@ -370,6 +382,7 @@ export default class VoidEyeAttacks
   {
     this.playHandAnimation('wall');
     const mesh = new THREE.Mesh(this.wallGeo, this.wallMat);
+    mesh.castShadow = true;
 
     mesh.position.set(x, -60, z);
 
@@ -493,7 +506,6 @@ export default class VoidEyeAttacks
     this.experience.camera.rotateUpsideDown(this.isUpsideDown);
 
     this.isUpsideDown = !this.isUpsideDown;
-
   }
 
   spawnBatch(attacksData)
@@ -658,6 +670,8 @@ export default class VoidEyeAttacks
     this.isDestroyed = false;
     this.lastAttackType = null;
     this.clearAllTimers()
+
+    this.isUpsideDown = true;
 
     this.experience.camera.reset();
 

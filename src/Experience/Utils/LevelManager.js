@@ -83,8 +83,7 @@ export default class LevelManager
 
   voidEyeEvent()
   {
-    // console.log('ok')
-    // this.experience.world.environment.currentThemeInstance.triggerVoidEyeEvent(5, 10);
+    this.experience.world.map.voidEyeAttacks.triggerVoidEyeEvent();
   }
 
   updateTimerUI(timeInMs)
@@ -97,8 +96,6 @@ export default class LevelManager
 
   triggerPortal()
   {
-    this.isTransitioning = true;
-
     const portal = this.experience.world.map.portal;
     if (portal && !portal.canExitPortal)
     {

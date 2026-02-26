@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+import cloudsFragShader from '../../Shaders/Clouds/frag.glsl'
+import cloudsVertShader from '../../Shaders/Clouds/vert.glsl'
 export default class PillarScapeTheme 
 {
   constructor(experience, parentDebugFolder)
@@ -13,56 +15,98 @@ export default class PillarScapeTheme
     this.group = new THREE.Group()
     this.scene.add(this.group)
 
-    this.clouds = []
     this.debugFolders = []
     this.parentDebugFolder = parentDebugFolder
 
     this.setPlanet()
     this.setClouds()
-
-    if (this.scene.fog) { this.scene.fog.exclude = [this.clouds] }
   }
 
   setClouds()
   {
-    const cloudTextures = [
-      this.resources.items.cloud1, this.resources.items.cloud2, this.resources.items.cloud3,
-      this.resources.items.cloud4, this.resources.items.cloud5, this.resources.items.cloud6,
-      this.resources.items.cloud7, this.resources.items.cloud8, this.resources.items.cloud9,
-      this.resources.items.cloud10
-    ].filter(tex => tex !== undefined)
+    this.cloudsParams = {
+      cloudscale: 5,
+      speed: 0.01,
+      windAngle: 19,
+      clouddark: 0.7,
+      cloudlight: 0.3,
+      cloudcover: 0,
+      cloudalpha: 8.0,
+      position: { x: 0, y: 500, z: -1510 },
+      scale: { x: 300, y: 300, z: 300 }
+    };
 
-    if (cloudTextures.length === 0) return;
-
-    const cloudCount = 3
-
-    for (let i = 0; i < cloudCount; i++)
+    const getWindDir = (angleDegrees) =>
     {
-      const randomTexture = cloudTextures[Math.floor(Math.random() * cloudTextures.length)]
-      const cloudGeometry = new THREE.PlaneGeometry(600, 300)
-      const cloudMaterial = new THREE.MeshBasicMaterial({
-        map: randomTexture,
-        transparent: true,
-        opacity: Math.random() * 0.5 + 0.5,
-        fog: false,
-        depthWrite: false
-      })
+      const rad = angleDegrees * (Math.PI / 180);
+      return new THREE.Vector2(Math.cos(rad), Math.sin(rad));
+    };
 
-      this.cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial)
-      this.cloudMesh.position.set((Math.random() - 0.5) * 800, 200 + Math.random() * 100, -500 - Math.random() * 500)
+    const uniforms = {
+      uTime: { value: 0.0 },
+      uCloudscale: { value: this.cloudsParams.cloudscale },
+      uSpeed: { value: this.cloudsParams.speed },
+      uWindDir: { value: getWindDir(this.cloudsParams.windAngle) },
+      uClouddark: { value: this.cloudsParams.clouddark },
+      uCloudlight: { value: this.cloudsParams.cloudlight },
+      uCloudcover: { value: this.cloudsParams.cloudcover },
+      uCloudalpha: { value: this.cloudsParams.cloudalpha }
+    };
 
-      const randomScale = Math.random() * 0.8 + 0.5
-      this.cloudMesh.scale.set(randomScale, randomScale, randomScale)
-      this.cloudMesh.userData.speed = Math.random() * 0.05 + 0.02
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      vertexShader: cloudsVertShader,
+      fragmentShader: cloudsFragShader,
+      uniforms: uniforms
+    });
 
-      this.group.add(this.cloudMesh)
-      this.clouds.push(this.cloudMesh)
+    const geometry = new THREE.PlaneGeometry(10, 10);
+    this.clouds = new THREE.Mesh(geometry, material);
+
+    this.clouds.position.set(this.cloudsParams.position.x, this.cloudsParams.position.y, this.cloudsParams.position.z);
+    this.clouds.scale.set(this.cloudsParams.scale.x, this.cloudsParams.scale.y, this.cloudsParams.scale.z);
+
+    this.scene.add(this.clouds);
+
+    if (this.debug.active && this.parentDebugFolder)
+    {
+      const skyFolder = this.parentDebugFolder.addFolder({ title: 'Sky', expanded: false });
+      if (this.debugFolders) this.debugFolders.push(skyFolder);
+
+      skyFolder.addBinding(this.cloudsParams, 'position', { label: 'Position' })
+        .on('change', (ev) => this.clouds.position.set(ev.value.x, ev.value.y, ev.value.z));
+
+      skyFolder.addBinding(this.cloudsParams, 'scale', { label: 'Scale' })
+        .on('change', (ev) => this.clouds.scale.set(ev.value.x, ev.value.y, ev.value.z));
+
+      skyFolder.addFolder({ title: 'Shader Settings' });
+
+      skyFolder.addBinding(this.cloudsParams, 'cloudscale', { min: 0, max: 10, label: 'CloudScale' })
+        .on('change', (ev) => material.uniforms.uCloudscale.value = ev.value);
+
+      skyFolder.addBinding(this.cloudsParams, 'speed', { min: 0, max: 0.1, label: 'Speed' })
+        .on('change', (ev) => material.uniforms.uSpeed.value = ev.value);
+
+      skyFolder.addBinding(this.cloudsParams, 'windAngle', { min: 0, max: 360, label: 'WindDirection' })
+        .on('change', (ev) => material.uniforms.uWindDir.value.copy(getWindDir(ev.value)));
+
+      skyFolder.addBinding(this.cloudsParams, 'clouddark', { min: 0, max: 1, label: 'CloudDark' })
+        .on('change', (ev) => material.uniforms.uClouddark.value = ev.value);
+
+      skyFolder.addBinding(this.cloudsParams, 'cloudlight', { min: 0, max: 1, label: 'CloudLight' })
+        .on('change', (ev) => material.uniforms.uCloudlight.value = ev.value);
+
+      skyFolder.addBinding(this.cloudsParams, 'cloudcover', { min: 0, max: 1, label: 'CloudCover' })
+        .on('change', (ev) => material.uniforms.uCloudcover.value = ev.value);
+
+      skyFolder.addBinding(this.cloudsParams, 'cloudalpha', { min: 0, max: 20, label: 'CloudAlpha' })
+        .on('change', (ev) => material.uniforms.uCloudalpha.value = ev.value);
     }
   }
 
   setPlanet()
   {
-    this.planetParams = { size: 1000, opacity: 0.4, dir: { x: 0, y: 500, z: -1500 } }
+    this.planetParams = { size: 1000, opacity: 0.6, dir: { x: 0, y: 500, z: -1500 } }
 
     const geometry = new THREE.PlaneGeometry(this.planetParams.size, this.planetParams.size);
     const material = new THREE.ShaderMaterial({
@@ -111,22 +155,21 @@ export default class PillarScapeTheme
 
   update()
   {
-    if (this.clouds && this.clouds.length > 0)
+    if (this.clouds)
     {
-      for (const cloud of this.clouds)
-      {
-        cloud.position.x -= cloud.userData.speed
-        if (cloud.position.x < -3000)
-        {
-          cloud.position.x = 3000
-          cloud.position.y = 200 + Math.random() * 400
-        }
-      }
+      this.clouds.material.uniforms.uTime.value += 0.01
     }
   }
 
   dispose()
   {
+    if (this.clouds) 
+    {
+      this.scene.remove(this.clouds)
+      if (this.clouds.geometry) this.clouds.geometry.dispose()
+      if (this.clouds.material) this.clouds.material.dispose()
+    }
+
     this.scene.remove(this.group)
 
     this.group.traverse((child) =>
@@ -144,8 +187,6 @@ export default class PillarScapeTheme
     })
 
     this.group.clear()
-
-    this.clouds = []
 
     if (this.debug.active && this.parentDebugFolder)
     {
