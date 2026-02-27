@@ -22,7 +22,7 @@ export class SandFloor
       windSpeed: 1.0,
       windAngle: 90,
       duneScale: 0.1,
-      duneHeight: 3.0,
+      duneHeight: 0.9,
       baseColor: '#000000',
       shadowColor: '#000000',
     };

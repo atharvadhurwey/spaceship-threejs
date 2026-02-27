@@ -23,14 +23,8 @@ export default class VoidEyeAttacks
     this.activeTimers = [];
 
     // Reusable materials/geometries
-    this.cubeGeo = new THREE.BoxGeometry(10, 10, 10);
-    this.cubeMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2 });
-
-    this.sphereGeo = new THREE.SphereGeometry(6, 32, 32);
-    this.sphereMat = new THREE.MeshStandardMaterial({ color: 0x880000, emissive: 0x440000 });
-
     this.wallGeo = new THREE.BoxGeometry(30, 60, 5);
-    this.wallMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.9, metalness: 0.2 });
+    this.wallMat = new THREE.MeshStandardMaterial({ color: 0x848884, roughness: 0.9, metalness: 0.4 });
 
     this.energyGeo = new THREE.SphereGeometry(2, 16, 16);
     this.energyMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -41,7 +35,7 @@ export default class VoidEyeAttacks
 
     this.spikeGeo = new THREE.ConeGeometry(8, 120, 16);
     this.spikeGeo.computeBoundsTree();
-    this.spikeMat = new THREE.MeshStandardMaterial({ color: 0x9D9D9D, roughness: 0.3, metalness: 0.8 });
+    this.spikeMat = new THREE.MeshStandardMaterial({ color: 0x848884, roughness: 0.5, metalness: 0.5 });
 
     this.box3 = new THREE.Box3();
 
@@ -109,8 +103,13 @@ export default class VoidEyeAttacks
         case '4':
           this.upSideDownAttack();
           break;
+        case '5':
+          this.spawnBatch([{ type: 'spinning_cross', z: -this.chunkLength * 0.4 }]);
+          break;
       }
     });
+
+    // this.triggerVoidEyeEvent();
   }
 
   triggerVoidEyeEvent()
@@ -151,7 +150,8 @@ export default class VoidEyeAttacks
         { type: 'walls', delayAfter: 5.5 },
         { type: 'beams', delayAfter: 4.0 },
         { type: 'spikes', delayAfter: 6.5 },
-        // { type: 'upSideDown', delayAfter: 3.5 }
+        // { type: 'upSideDown', delayAfter: 3.5 },
+        { type: 'spinning_cross', delayAfter: 4.0 }
       ];
 
       const availableAttacks = attacks.filter(attack => attack.type !== this.lastAttackType);
@@ -206,6 +206,10 @@ export default class VoidEyeAttacks
         ]);
         break;
 
+      case 'spinning_cross':
+        this.spawnBatch([{ type: 'spinning_cross', z: -this.chunkLength * 0.4 }]);
+        break;
+
       case 'upSideDown':
         this.upSideDownAttack();
         break;
@@ -223,6 +227,7 @@ export default class VoidEyeAttacks
     this.gunSignAction = null;
     this.spikeUpAction = null;
     this.upSideDownAction = null;
+    this.spinningLasersAction = null;
     this.currentAction = null;
 
     if (this.handModel.animations && this.handModel.animations.length > 0)
@@ -258,6 +263,13 @@ export default class VoidEyeAttacks
           this.upSideDownAction.setLoop(THREE.LoopOnce);
           this.upSideDownAction.clampWhenFinished = true;
         }
+
+        if (this.handModel.animations[i].name == 'spinningLasersSign')
+        {
+          this.spinningLasersAction = this.mixer.clipAction(this.handModel.animations[i]);
+          this.spinningLasersAction.setLoop(THREE.LoopOnce);
+          this.spinningLasersAction.clampWhenFinished = true;
+        }
       }
     }
 
@@ -274,6 +286,7 @@ export default class VoidEyeAttacks
     else if (type === 'gun') nextAction = this.gunSignAction;
     else if (type === 'spike') nextAction = this.spikeUpAction;
     else if (type === 'upSideDown') nextAction = this.upSideDownAction;
+    else if (type === 'spinning_cross') nextAction = this.spinningLasersAction;
 
     if (!nextAction) return;
 
@@ -323,6 +336,20 @@ export default class VoidEyeAttacks
       gsap.to(this.handModel.scene.rotation, {
         y: 0,
         x: 0,
+        duration: 1,
+        ease: "power2.inOut"
+      });
+
+      gsap.to(this.handModel.scene.position, {
+        y: 120,
+        duration: 1,
+        ease: "power2.inOut"
+      });
+    } else if (type === 'spinning_cross') 
+    {
+      gsap.to(this.handModel.scene.rotation, {
+        y: Math.PI,
+        x: Math.PI / 3,
         duration: 1,
         ease: "power2.inOut"
       });
@@ -439,7 +466,7 @@ export default class VoidEyeAttacks
         if (this.isDestroyed) return;
 
         const tracker = new THREE.Object3D();
-        tracker.position.set(0, 0, -50);
+        tracker.position.set(0, 0, -40);
         this.scene.add(tracker);
 
         const trackerObj = { mesh: tracker, type: 'tracker' };
@@ -499,6 +526,64 @@ export default class VoidEyeAttacks
     }
   }
 
+  spawnSpinningLasers(z)
+  {
+    this.playHandAnimation('spinning_cross');
+
+    const positions = [-25, 0, 25]
+    const randomPos = positions[Math.floor(Math.random() * positions.length)];
+
+    const pivot = new THREE.Group();
+    pivot.position.set(randomPos, 40, z);
+    this.scene.add(pivot);
+
+    const attackObj = { mesh: pivot, type: 'spinning_cross' };
+    this.activeAttacks.push(attackObj);
+
+    const chargeOrb = new THREE.Mesh(this.energyGeo, this.energyMat);
+    chargeOrb.scale.set(0, 0, 0);
+    pivot.add(chargeOrb);
+
+    const chargeDuration = 1.5;
+
+    const chargeTimer = gsap.delayedCall(0, () => 
+    {
+      if (this.isDestroyed || !pivot.parent) return;
+      gsap.to(chargeOrb.scale, { x: 12, y: 12, z: 12, duration: chargeDuration, ease: "power2.in" });
+    });
+    this.activeTimers.push(chargeTimer);
+
+    const spinTimer = gsap.delayedCall(chargeDuration, () => 
+    {
+      if (this.isDestroyed || !pivot.parent) return;
+
+      const beamMat = this.laserMat.clone();
+
+      const laser1 = new THREE.Mesh(this.laserGeo, beamMat);
+      laser1.rotation.x = Math.PI / 2;
+
+      const laser2 = new THREE.Mesh(this.laserGeo, beamMat);
+      laser2.rotation.y = Math.PI / 2;
+
+      pivot.add(laser1);
+      pivot.add(laser2);
+
+      laser1.scale.set(0.1, 0.1, 1);
+      laser2.scale.set(0.1, 0.1, 1);
+      gsap.to([laser1.scale, laser2.scale], { x: 1, y: 1, duration: 0.3, ease: "back.out(1.5)" });
+
+      const randomRotationSpeed = Math.random() * 0.5 + 0.5;
+
+      gsap.to(pivot.rotation, {
+        z: Math.PI * 2,
+        duration: 2 + randomRotationSpeed,
+        repeat: -1,
+        ease: "none"
+      });
+    });
+    this.activeTimers.push(spinTimer);
+  }
+
   upSideDownAttack()
   {
     this.playHandAnimation('upSideDown');
@@ -519,6 +604,7 @@ export default class VoidEyeAttacks
       if (attack.type === 'wall') this.spawnWall(xPos, zPos);
       else if (attack.type === 'beam') this.spawnBeams();
       else if (attack.type === 'spike') this.spawnSpikes(xPos, zPos);
+      else if (attack.type === 'spinning_cross') this.spawnSpinningLasers(zPos);
     });
   }
 
@@ -575,6 +661,35 @@ export default class VoidEyeAttacks
         const laserRadius = 6;
 
         if (distance < (shipHitRadius + laserRadius)) return attack.mesh.position.clone();
+      } else if (attack.type === 'spinning_cross') 
+      {
+        attack.mesh.updateMatrixWorld();
+
+        for (const child of attack.mesh.children) 
+        {
+          child.updateMatrixWorld();
+
+          if (child.geometry === this.laserGeo) 
+          {
+            const start = new THREE.Vector3(0, 0, -500).applyMatrix4(child.matrixWorld);
+            const end = new THREE.Vector3(0, 0, 500).applyMatrix4(child.matrixWorld);
+
+            const line = new THREE.Line3(start, end);
+            const closestPoint = new THREE.Vector3();
+            line.closestPointToPoint(shipCenter, true, closestPoint);
+
+            const distance = closestPoint.distanceTo(shipCenter);
+            const laserRadius = 6;
+
+            if (distance < (shipHitRadius + laserRadius)) return attack.mesh.position.clone();
+          }
+          else if (child.geometry === this.energyGeo) 
+          {
+            const orbPos = new THREE.Vector3().setFromMatrixPosition(child.matrixWorld);
+            const orbRadius = 2 * child.scale.x;
+            if (shipCenter.distanceTo(orbPos) < (shipHitRadius + orbRadius)) return attack.mesh.position.clone();
+          }
+        }
       }
       else if (attack.type === 'spike')
       {
@@ -620,6 +735,16 @@ export default class VoidEyeAttacks
     {
       gsap.killTweensOf(attack.mesh.position);
       gsap.killTweensOf(attack.mesh.scale);
+      gsap.killTweensOf(attack.mesh.rotation); // Ensures the pivot stops spinning
+
+      if (attack.type === 'spinning_cross') 
+      {
+        attack.mesh.children.forEach(child =>
+        {
+          gsap.killTweensOf(child.scale);
+          if (child.geometry === this.laserGeo && child.material) child.material.dispose();
+        });
+      }
 
       if (attack.mesh.material) 
       {
@@ -645,10 +770,6 @@ export default class VoidEyeAttacks
       }
     }
 
-    this.cubeGeo.dispose();
-    this.cubeMat.dispose();
-    this.sphereGeo.dispose();
-    this.sphereMat.dispose();
     this.wallGeo.dispose();
     this.wallMat.dispose();
     this.energyGeo.dispose();
@@ -690,6 +811,16 @@ export default class VoidEyeAttacks
     {
       gsap.killTweensOf(attack.mesh.position);
       gsap.killTweensOf(attack.mesh.scale);
+      gsap.killTweensOf(attack.mesh.rotation);
+
+      if (attack.type === 'spinning_cross') 
+      {
+        attack.mesh.children.forEach(child =>
+        {
+          gsap.killTweensOf(child.scale);
+          if (child.geometry === this.laserGeo && child.material) child.material.dispose();
+        });
+      }
 
       if (attack.mesh.material) 
       {
