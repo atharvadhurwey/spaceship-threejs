@@ -58,7 +58,6 @@ export default class Environment
 
         this.currentTheme = themeKey
 
-        // 1. Instantiate the new theme models FIRST
         if (themeKey === 'pillar')
         {
             this.currentThemeInstance = new PillarScapeTheme(this.experience, this.themeDebugFolder)

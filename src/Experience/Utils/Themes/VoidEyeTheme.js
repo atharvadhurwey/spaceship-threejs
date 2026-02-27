@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import gsap from 'gsap'
 
 import voidEyeFragShader from '../../Shaders/Eye/frag.glsl'
 import voidEyeVertShader from '../../Shaders/Eye/vert.glsl'
@@ -286,6 +287,37 @@ export default class VoidEyeTheme
       eyeFolder.addBinding(this.eyeParams, 'eye2', { color: { type: 'float' }, label: 'IrisColor2' })
         .on('change', (ev) => { material.uniforms.uEye2.value.setRGB(ev.value.r, ev.value.g, ev.value.b); });
     }
+  }
+
+  animateInnerRadius(targetRadius, duration = 1.0)
+  {
+    if (!this.eye || !this.eye.material.uniforms)
+    {
+      console.warn("Eye material not initialized.");
+      return;
+    }
+
+    gsap.to(this.eye.material.uniforms.uInnerRadius, {
+      value: targetRadius,
+      duration: duration,
+      ease: "power2.inOut",
+      onUpdate: () =>
+      {
+        this.eyeParams.innerRadius = this.eye.material.uniforms.uInnerRadius.value;
+      }
+    });
+  }
+
+  resetEye()
+  {
+    if (!this.eye || !this.eye.material.uniforms) return;
+
+    gsap.killTweensOf(this.eye.material.uniforms.uInnerRadius);
+
+    const defaultInnerRadius = 0.25;
+
+    this.eye.material.uniforms.uInnerRadius.value = defaultInnerRadius;
+    this.eyeParams.innerRadius = defaultInnerRadius;
   }
 
   update()

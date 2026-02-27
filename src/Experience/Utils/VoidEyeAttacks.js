@@ -588,6 +588,8 @@ export default class VoidEyeAttacks
   {
     this.playHandAnimation('upSideDown');
 
+    this.experience.world.environment.currentThemeInstance.animateInnerRadius(0.6, 4)
+
     this.experience.camera.rotateUpsideDown(this.isUpsideDown);
 
     this.isUpsideDown = !this.isUpsideDown;

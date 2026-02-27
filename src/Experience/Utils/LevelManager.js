@@ -129,7 +129,7 @@ export default class LevelManager
     if (this.hasFiredRedApexEvent && this.experience.world.environment.currentThemeInstance.name == 'redApexTheme') this.experience.world.environment.currentThemeInstance.resetPyramid()
     this.hasFiredRedApexEvent = false;
 
-    // if (this.hadFiredVoidEyeEvent) this.experience.world.environment.currentThemeInstance.resetEye()
+    if (this.hadFiredVoidEyeEvent && this.experience.world.environment.currentThemeInstance.name == 'voidEyeTheme') this.experience.world.environment.currentThemeInstance.resetEye()
     this.hadFiredVoidEyeEvent = false;
 
     this.updateTimerUI(this.targetSurvivalTime);
