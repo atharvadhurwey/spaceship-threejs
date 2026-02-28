@@ -3,6 +3,7 @@ import Environment from './Environment.js'
 import Map from './Map.js'
 import Ship from './Ship.js'
 import LevelManager from '../Utils/LevelManager.js'
+import AudioManager from './AudioManager.js'
 
 export default class World
 {
@@ -15,6 +16,8 @@ export default class World
 
         this.isResetting = false
         this.isStarted = false
+
+        this.audioManager = new AudioManager()
 
         this.resources.on('ready', () =>
         {
@@ -31,6 +34,7 @@ export default class World
     {
         const instructionScreen = document.getElementById('instruction-screen')
         const startButton = document.getElementById('start-button')
+        const volumeSlider = document.getElementById('volume-slider')
 
         if (startButton)
         {
@@ -41,8 +45,28 @@ export default class World
             {
                 instructionScreen.classList.add('hidden')
                 this.isStarted = true
+                this.audioManager.play()
             })
         }
+
+        if (volumeSlider) 
+        {
+            volumeSlider.addEventListener('input', (event) => 
+            {
+                this.audioManager.play()
+                this.audioManager.setVolume(event.target.value)
+            })
+        }
+
+        window.addEventListener('keydown', (e) =>
+        {
+            if (e.key === 'Escape' && instructionScreen.classList.contains('hidden'))
+            {
+                startButton.innerText = 'Continue'
+                instructionScreen.classList.remove('hidden')
+                this.isStarted = false
+            }
+        })
     }
 
     update()
@@ -62,13 +86,15 @@ export default class World
                     this.isResetting = true
 
                     this.ship.explode()
-                    this.movement.disable();
-                    this.levelManager.stop();
+                    this.movement.disable()
+                    this.levelManager.stop()
+
+                    this.audioManager.suppressVolume(0.2)
 
                     setTimeout(() => 
                     {
-                        this.reset();
-                    }, 3000);
+                        this.reset()
+                    }, 3000)
                 }
             }
         }
@@ -76,11 +102,13 @@ export default class World
 
     reset()
     {
-        this.movement.reset();
-        this.ship.reset();
-        this.map.reset();
-        if (this.levelManager) { this.levelManager.reset(); }
+        this.movement.reset()
+        this.ship.reset()
+        this.map.reset()
+        if (this.levelManager) { this.levelManager.reset() }
 
-        this.isResetting = false;
+        this.isResetting = false
+
+        this.audioManager.restoreVolume(1.0)
     }
 }

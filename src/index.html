@@ -8,7 +8,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 
-        <title>Spaceship</title>
+        <title>The Long Way Back</title>
         <link rel="stylesheet" href="./style.css" />
     </head>
     <body>
@@ -24,11 +24,17 @@
             <p>survive each map for the given amount of time and WIN!!!</p>
             <p>Instructions: Use A-D or Arrow Keys to move.</p>
             <button id="start-button" disabled>Loading...</button>
+            <div class="volume-control">
+                <label for="volume-slider">Music Volume</label>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.1" />
+            </div>
         </div>
 
         <div class="end-credits-screen">
             <h1>Thank You For Playing</h1>
-            <p>Created by Atharva Dhurwey | <a href="https://github.com/atharvadhurwey" target="_blank" style="color: orange; text-decoration: none">Github</a></p>
+            <p>
+                Created by Atharva Dhurwey | <a href="https://github.com/atharvadhurwey/spaceship-threejs" target="_blank" style="color: orange; text-decoration: none">Github</a>
+            </p>
             <!-- <button onclick="location.reload()">Play Again</button> -->
         </div>
 

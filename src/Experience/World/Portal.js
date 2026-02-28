@@ -82,6 +82,8 @@ export default class Portal
 
     if (this.experience.world.levelManager) { this.experience.world.levelManager.isTransitioning = true; }
 
+    if (this.experience.world.audioManager) { this.experience.world.audioManager.suppressVolume(0.5) }
+
     this.isGameEnding = this.map.activeFloor && this.map.activeFloor.name === 'VoidFloor';
 
     const tl = gsap.timeline({
@@ -170,6 +172,8 @@ export default class Portal
     if (!this.canExitPortal) return;
 
     if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() }
+
+    if (this.experience.world.audioManager) { this.experience.world.audioManager.restoreVolume(0.5) }
 
     const env = this.experience.world.environment;
     if (env.currentTheme === 'pillar') env.switchTheme('pyramid');

@@ -55,6 +55,7 @@ body {
 
 #start-button {
     margin-top: 20px;
+    margin-bottom: 20px;
     padding: 10px 30px;
     font-size: 1.2rem;
     cursor: pointer;
