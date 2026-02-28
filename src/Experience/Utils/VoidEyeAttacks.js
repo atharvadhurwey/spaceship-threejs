@@ -436,9 +436,9 @@ export default class VoidEyeAttacks
 
     const offsets = [
       new THREE.Vector3(-150, -5, 0),
-      new THREE.Vector3(0, 150, 0),
+      new THREE.Vector3(0, 80, 0),
       new THREE.Vector3(150, -5, 0),
-      new THREE.Vector3(0, -50, 0)
+      new THREE.Vector3(0, -60, 0)
     ];
 
     for (let i = 0; i < totalShots; i++) 

@@ -20,6 +20,7 @@ export default class LevelManager
     this.isTransitioning = false;
 
     this.timerElement = document.getElementById('timer-display');
+    this.timerElementContainer = document.getElementById('game-ui');
 
     this.hasFiredRedApexEvent = false;
     this.hasFiredVoidEyeEvent = false;
@@ -45,9 +46,18 @@ export default class LevelManager
   {
     if (this.isTransitioning)
     {
-      if (this.timerElement) this.timerElement.innerText = " ";
+      if (this.timerElement && this.timerElementContainer)
+      {
+        this.timerElementContainer.style.display = "none";
+        this.timerElement.innerText = " "
+      };
       return;
     }
+
+    if (this.timerElement && this.timerElementContainer)
+    {
+      this.timerElementContainer.style.display = "block";
+    };
 
     this.elapsedTime += this.time.delta;
 

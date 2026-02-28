@@ -20,16 +20,21 @@ body {
 
 #game-ui {
     position: absolute;
-    top: 30px;
+    top: 2rem;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
     pointer-events: none;
 
     color: #ffffff;
-    font-size: 2.5rem;
-    font-weight: bold;
-    letter-spacing: 2px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 50%;
+    text-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+    font-weight: 900;
+
+    font-size: clamp(2.5rem, 3vw, 6rem);
+    padding: clamp(10px, 0.5vw, 30px);
 }
 
 .overlay {
@@ -46,6 +51,11 @@ body {
     align-items: center;
     z-index: 10;
     transition: opacity 0.5s ease-in-out;
+    font-size: clamp(1rem, 2vw, 1.5rem);
+
+    padding: clamp(1rem, 5vw, 2rem);
+    text-align: center;
+    box-sizing: border-box;
 }
 
 .overlay.hidden {
@@ -54,10 +64,13 @@ body {
 }
 
 #start-button {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 10px 30px;
-    font-size: 1.2rem;
+    margin-top: clamp(15px, 3vh, 30px);
+    margin-bottom: clamp(15px, 3vh, 30px);
+
+    padding: clamp(10px, 1vw, 15px) clamp(20px, 2vw, 40px);
+
+    font-size: clamp(1rem, 2vw, 1.5rem);
+
     cursor: pointer;
     color: #000000;
     border: none;
@@ -77,10 +90,14 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 9999;
+    font-size: clamp(1rem, 2vw, 1.5rem);
+    padding: clamp(1rem, 5vw, 2rem);
+    text-align: center;
+    box-sizing: border-box;
 }
 
 .end-credits-screen h1 {
-    font-size: 4rem;
-    margin-bottom: 1rem;
+    font-size: clamp(2rem, 8vw, 4rem);
+    margin-bottom: clamp(1rem, 3vh, 2rem);
     color: #f59714;
 }
