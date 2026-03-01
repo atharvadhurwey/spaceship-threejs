@@ -44,8 +44,9 @@ export default class World
             startButton.addEventListener('click', () => 
             {
                 instructionScreen.classList.add('hidden')
-                this.isStarted = true
                 this.audioManager.play()
+                this.isStarted = true
+                if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.resume() }
             })
         }
 
@@ -65,6 +66,8 @@ export default class World
                 startButton.innerText = 'Continue'
                 instructionScreen.classList.remove('hidden')
                 this.isStarted = false
+                if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.pause() }
+
             }
         })
     }

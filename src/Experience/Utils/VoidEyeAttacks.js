@@ -40,6 +40,7 @@ export default class VoidEyeAttacks
     this.box3 = new THREE.Box3();
 
     this.isDestroyed = false;
+    this.isPaused = false;
     this.isUpsideDown = true;
     this.isAttacking = false;
     this.lastAttackType = null;
@@ -49,6 +50,8 @@ export default class VoidEyeAttacks
 
     window.addEventListener('keydown', (e) =>
     {
+      if (this.isPaused && e.key >= '1' && e.key <= '5') return; // Prevent spawning if paused
+
       switch (e.key)
       {
         case '1':
@@ -110,6 +113,84 @@ export default class VoidEyeAttacks
     });
 
     // this.triggerVoidEyeEvent();
+  }
+
+  pause()
+  {
+    if (this.isPaused || this.isDestroyed) return;
+    this.isPaused = true;
+
+    if (this.nextAttackTimer) this.nextAttackTimer.pause();
+    this.activeTimers.forEach(timer => timer.pause());
+
+    const pauseTweens = (target) =>
+    {
+      if (target) gsap.getTweensOf(target).forEach(t => t.pause());
+    };
+
+    pauseTweens(this.handModel.scene.position);
+    pauseTweens(this.handModel.scene.rotation);
+
+    this.activeAttacks.forEach(attack =>
+    {
+      pauseTweens(attack.mesh.position);
+      pauseTweens(attack.mesh.rotation);
+      pauseTweens(attack.mesh.scale);
+
+      if (attack.type === 'spinning_cross')
+      {
+        attack.mesh.children.forEach(child =>
+        {
+          pauseTweens(child.scale);
+          if (child.material) pauseTweens(child.material);
+        });
+      }
+      if (attack.mesh.material) pauseTweens(attack.mesh.material);
+    });
+
+    this.scene.children.forEach(child =>
+    {
+      if (child.geometry === this.energyGeo) pauseTweens(child.scale);
+    });
+  }
+
+  resume()
+  {
+    if (!this.isPaused || this.isDestroyed) return;
+    this.isPaused = false;
+
+    if (this.nextAttackTimer) this.nextAttackTimer.resume();
+    this.activeTimers.forEach(timer => timer.resume());
+
+    const resumeTweens = (target) =>
+    {
+      if (target) gsap.getTweensOf(target).forEach(t => t.play());
+    };
+
+    resumeTweens(this.handModel.scene.position);
+    resumeTweens(this.handModel.scene.rotation);
+
+    this.activeAttacks.forEach(attack =>
+    {
+      resumeTweens(attack.mesh.position);
+      resumeTweens(attack.mesh.rotation);
+      resumeTweens(attack.mesh.scale);
+
+      if (attack.type === 'spinning_cross')
+      {
+        attack.mesh.children.forEach(child =>
+        {
+          resumeTweens(child.scale);
+          if (child.material) resumeTweens(child.material);
+        });
+      }
+      if (attack.mesh.material) resumeTweens(attack.mesh.material);
+    });
+
+    this.scene.children.forEach(child =>
+    {
+      if (child.geometry === this.energyGeo) resumeTweens(child.scale);
+    });
   }
 
   triggerVoidEyeEvent()
@@ -522,7 +603,6 @@ export default class VoidEyeAttacks
         this.activeTimers.push(trackingTimer);
       });
       this.activeTimers.push(shotTimer);
-
     }
   }
 
@@ -612,6 +692,8 @@ export default class VoidEyeAttacks
 
   update(deltaTime, shipVelocity, forwardSpeed)
   {
+    if (this.isPaused || this.isDestroyed) return;
+
     if (this.mixer) this.mixer.update(deltaTime * 0.01);
 
     for (let i = this.activeAttacks.length - 1; i >= 0; i--)
@@ -737,7 +819,7 @@ export default class VoidEyeAttacks
     {
       gsap.killTweensOf(attack.mesh.position);
       gsap.killTweensOf(attack.mesh.scale);
-      gsap.killTweensOf(attack.mesh.rotation); // Ensures the pivot stops spinning
+      gsap.killTweensOf(attack.mesh.rotation);
 
       if (attack.type === 'spinning_cross') 
       {
@@ -791,6 +873,7 @@ export default class VoidEyeAttacks
   {
     this.stopAttacking();
     this.isDestroyed = false;
+    this.isPaused = false;
     this.lastAttackType = null;
     this.clearAllTimers()
 
@@ -848,10 +931,12 @@ export default class VoidEyeAttacks
       }
     }
 
-    setTimeout(() =>
+    const startDelayTimer = gsap.delayedCall(3, () =>
     {
-      this.startAttacking();
-    }, 3000);
+      if (!this.isDestroyed) this.startAttacking();
+    });
+
+    this.activeTimers.push(startDelayTimer);
   }
 
   clearAllTimers()
