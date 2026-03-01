@@ -8,7 +8,7 @@ export default class LevelManager
     this.time = this.experience.time;
 
     this.survivalTimes = {
-      'pillarScape': 2500,
+      'pillarScape': 1500,
       'redApex': 3000,
       'voidEye': 4500
     }
