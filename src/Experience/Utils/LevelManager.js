@@ -8,7 +8,7 @@ export default class LevelManager
     this.time = this.experience.time;
 
     this.survivalTimes = {
-      'pillarScape': 3000,
+      'pillarScape': 2500,
       'redApex': 3000,
       'voidEye': 4500
     }
@@ -101,7 +101,7 @@ export default class LevelManager
     if (!this.timerElement) return;
     const totalSeconds = Math.ceil(timeInMs / 100);
 
-    this.timerElement.innerText = totalSeconds.toString();
+    this.timerElement.innerText = (totalSeconds < 10 ? '0' : '') + totalSeconds.toString();
   }
 
   triggerPortal()
