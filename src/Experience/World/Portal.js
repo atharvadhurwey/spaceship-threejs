@@ -80,7 +80,11 @@ export default class Portal
 
     if (this.experience.world.ship) { this.experience.world.ship.toggleCollisions() }
 
-    if (this.experience.world.levelManager) { this.experience.world.levelManager.isTransitioning = true; }
+    if (this.experience.world.levelManager)
+    {
+      this.experience.world.levelManager.isTransitioning = true;
+      this.experience.world.levelManager.hide(true)
+    }
 
     if (this.experience.world.audioManager) { this.experience.world.audioManager.suppressVolume(0.5) }
 

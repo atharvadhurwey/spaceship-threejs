@@ -42,17 +42,20 @@ export default class LevelManager
     }
   }
 
+  hide(hide = true)
+  {
+    if (this.timerElement && this.timerElementContainer && hide)
+    {
+      this.timerElementContainer.style.display = "none";
+    } else if (this.timerElement && this.timerElementContainer && !hide)
+    {
+      this.timerElementContainer.style.display = "block";
+    }
+  }
+
   update()
   {
-    if (this.isTransitioning)
-    {
-      if (this.timerElement && this.timerElementContainer)
-      {
-        this.timerElementContainer.style.display = "none";
-        this.timerElement.innerText = " "
-      };
-      return;
-    }
+    if (this.isTransitioning) { return; }
 
     if (this.timerElement && this.timerElementContainer)
     {
@@ -128,7 +131,7 @@ export default class LevelManager
     this.elapsedTime = 0;
     this.isTransitioning = true;
 
-    this.updateTimerUI(this.targetSurvivalTime);
+    // this.updateTimerUI(this.targetSurvivalTime);
   }
 
   reset()
