@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 import gsap from 'gsap'
 
-import voidEyeFragShader from '../../Shaders/Eye/frag.glsl'
-import voidEyeVertShader from '../../Shaders/Eye/vert.glsl'
+import voidEyeFragShader from './Eye/frag.glsl'
+import voidEyeVertShader from './Eye/vert.glsl'
 
-import starFragShader from '../../Shaders/Stars/frag.glsl'
-import starVertShader from '../../Shaders/Stars/vert.glsl'
+import starFragShader from './Stars/frag.glsl'
+import starVertShader from './Stars/vert.glsl'
 
 export default class VoidEyeTheme 
 {

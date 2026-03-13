@@ -1,7 +1,9 @@
 import * as THREE from 'three'
+import gsap from 'gsap'
 
-import cloudsFragShader from '../../Shaders/Clouds/frag.glsl'
-import cloudsVertShader from '../../Shaders/Clouds/vert.glsl'
+import cloudsFragShader from './Clouds/frag.glsl'
+import cloudsVertShader from './Clouds/vert.glsl'
+
 export default class PillarScapeTheme 
 {
   constructor(experience, parentDebugFolder)
@@ -159,6 +161,45 @@ export default class PillarScapeTheme
     {
       this.clouds.material.uniforms.uTime.value += 0.01
     }
+  }
+
+  hide()
+  {
+    this.planetBackground.visible = false
+    this.clouds.visible = false
+  }
+
+  appear(duration = 2.0)
+  {
+
+    const tl = new gsap.timeline();
+
+    const fadeInTarget = (target, duration = 2.0) =>
+    {
+      if (!target) return;
+
+      tl.set(target, { visible: true }, 0);
+
+      const uniqueMaterials = new Set();
+
+      target.traverse((child) =>
+      {
+        if (child.isMesh && child.material)
+        {
+          const materials = Array.isArray(child.material) ? child.material : [child.material];
+          materials.forEach(mat => uniqueMaterials.add(mat));
+        }
+      });
+
+      uniqueMaterials.forEach(mat =>
+      {
+        mat.transparent = true;
+        tl.fromTo(mat, { opacity: 0 }, { opacity: 1, duration: duration, ease: "power2.outIn" }, 0);
+      });
+    };
+
+    fadeInTarget(this.planetBackground, duration)
+    fadeInTarget(this.clouds, duration)
   }
 
   dispose()

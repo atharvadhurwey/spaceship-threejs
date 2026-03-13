@@ -32,44 +32,32 @@ export default class World
 
     setupInstructions()
     {
-        const instructionScreen = document.getElementById('instruction-screen')
-        const startButton = document.getElementById('start-button')
-        const volumeSlider = document.getElementById('volume-slider')
+        this.experience.ui.init()
 
-        if (startButton)
+        this.experience.ui.on('startGame', () =>
         {
-            startButton.disabled = false
-            startButton.innerText = 'Start Game'
+            this.audioManager.play();
+            this.isStarted = true;
+            if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.resume(); }
+            if (this.environment.currentThemeInstance.name == 'dataStreamTheme') { this.environment.currentThemeInstance.resume(); }
+        });
 
-            startButton.addEventListener('click', () => 
-            {
-                instructionScreen.classList.add('hidden')
-                this.audioManager.play()
-                this.isStarted = true
-                if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.resume() }
-            })
-        }
-
-        if (volumeSlider) 
+        this.experience.ui.on('volumeChanged', (value) =>
         {
-            volumeSlider.addEventListener('input', (event) => 
-            {
-                this.audioManager.play()
-                this.audioManager.setVolume(event.target.value)
-            })
-        }
+            this.audioManager.play();
+            this.audioManager.setVolume(value);
+        });
 
-        window.addEventListener('keydown', (e) =>
+        this.experience.input.on('escapePressed', () =>
         {
-            if (e.key === 'Escape' && instructionScreen.classList.contains('hidden'))
+            if (this.experience.ui.isInstructionHidden())
             {
-                startButton.innerText = 'Continue'
-                instructionScreen.classList.remove('hidden')
-                this.isStarted = false
-                if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.pause() }
-
+                this.experience.ui.showInstructions('Continue');
+                this.isStarted = false;
+                if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.pause(); }
+                if (this.environment.currentThemeInstance.name == 'dataStreamTheme') { this.environment.currentThemeInstance.pause(); }
             }
-        })
+        });
     }
 
     update()

@@ -1,11 +1,21 @@
 import * as THREE from 'three'
 import Experience from '../Experience.js'
 
-import PillarScapeTheme from '../Utils/Themes/PillarScapeTheme.js';
-import RedApexTheme from '../Utils/Themes/RedApexTheme.js';
-
 import { MAP_THEMES } from '../Utils/configFile'
-import VoidEyeTheme from '../Utils/Themes/VoidEyeTheme.js';
+
+import PillarScapeTheme from './Themes/PillarScape/PillarScapeTheme.js';
+import RedApexTheme from './Themes/RedApex/RedApexTheme.js';
+import VoidEyeTheme from './Themes/VoidEye/VoidEyeTheme.js';
+import DataStreamTheme from './Themes/DataStream/DataStreamTheme.js';
+import HushTheme from './Themes/Hush/HushTheme.js';
+
+const THEME_CLASSES = {
+    pillarScape: PillarScapeTheme,
+    redApex: RedApexTheme,
+    voidEye: VoidEyeTheme,
+    dataStream: DataStreamTheme,
+    hush: HushTheme
+};
 
 export default class Environment
 {
@@ -30,16 +40,18 @@ export default class Environment
         this.setGradientBackground()
         this.setFog()
 
-        this.switchTheme('pillar');
+        this.switchTheme('pillarScape');
 
         if (this.debug.active)
         {
-            const debugObject = { Map: 'pillar' }
+            const debugObject = { Map: 'pillarScape' }
             this.debugFolder.addBinding(debugObject, 'Map', {
                 options: {
-                    pillarScape: 'pillar',
-                    redApex: 'pyramid',
-                    voidEye: 'eye'
+                    pillarScape: 'pillarScape',
+                    redApex: 'redApex',
+                    dataStream: 'dataStream',
+                    hush: 'hush',
+                    voidEye: 'voidEye',
                 }
             }).on('change', (ev) => { this.switchTheme(ev.value) })
         }
@@ -47,8 +59,9 @@ export default class Environment
 
     switchTheme(themeKey)
     {
-        const theme = MAP_THEMES[themeKey]
-        if (!theme) return console.warn(`Theme ${themeKey} not found`)
+        const ThemeClass = THEME_CLASSES[themeKey];
+        const themeConfig = MAP_THEMES[themeKey]
+        if (!ThemeClass || !themeConfig) return;
 
         if (this.currentThemeInstance)
         {
@@ -58,26 +71,14 @@ export default class Environment
 
         this.currentTheme = themeKey
 
-        if (themeKey === 'pillar')
-        {
-            this.currentThemeInstance = new PillarScapeTheme(this.experience, this.themeDebugFolder)
-        }
-        else if (themeKey === 'pyramid')
-        {
-            this.currentThemeInstance = new RedApexTheme(this.experience, this.themeDebugFolder)
-        }
-        else if (themeKey === 'eye')
-        {
-            this.currentThemeInstance = new VoidEyeTheme(this.experience, this.themeDebugFolder)
-        }
-
+        this.currentThemeInstance = new ThemeClass(this.experience, this.themeDebugFolder);
 
         if (this.experience.world.map && this.experience.world.map.updateTheme)
         {
-            this.experience.world.map.updateTheme(theme)
+            this.experience.world.map.updateTheme(themeConfig)
         }
 
-        this.updateGlobalSettings(theme)
+        this.updateGlobalSettings(themeConfig)
 
         if (this.debug.active && this.debugFolder)
         {
@@ -125,14 +126,14 @@ export default class Environment
     setSunLight()
     {
         this.sunLightParams = {
-            color: MAP_THEMES.pyramid.directionalLight.color || 0x000000,
-            intensity: MAP_THEMES.pyramid.directionalLight.intensity || 1.0,
+            color: MAP_THEMES.redApex.directionalLight.color || 0x000000,
+            intensity: MAP_THEMES.redApex.directionalLight.intensity || 1.0,
             normalBias: 0.5,
             width: 256,
             height: 256,
             far: 1600,
             near: 750,
-            dir: MAP_THEMES.pyramid.directionalLight.position || { x: 520, y: 900, z: -650 },
+            dir: MAP_THEMES.redApex.directionalLight.position || { x: 520, y: 900, z: -650 },
         }
 
         this.sunLight = new THREE.DirectionalLight(this.sunLightParams.color, this.sunLightParams.intensity)
@@ -194,7 +195,7 @@ export default class Environment
     setEnvironmentMap()
     {
         this.environmentMap = {}
-        this.environmentMap.intensity = MAP_THEMES.pyramid.env.intensity || 0.4
+        this.environmentMap.intensity = MAP_THEMES.redApex.env.intensity || 0.4
 
         this.environmentMap.texture = this.resources.items.pillarScapeEMTexture
 
@@ -237,8 +238,8 @@ export default class Environment
     setGradientBackground()
     {
         this.bgColors = {
-            top: MAP_THEMES.pyramid.background.top || '#1a5b8c',
-            bottom: MAP_THEMES.pyramid.background.bottom || '#87ceeb'
+            top: MAP_THEMES.redApex.background.top || '#1a5b8c',
+            bottom: MAP_THEMES.redApex.background.bottom || '#87ceeb'
         };
 
         this.bgCanvas = document.createElement('canvas');
@@ -290,9 +291,9 @@ export default class Environment
     setFog()
     {
         this.fogParams = {
-            color: MAP_THEMES.pyramid.fog.color || 0x1d0000,
-            near: MAP_THEMES.pyramid.fog.near || 200,
-            far: MAP_THEMES.pyramid.fog.far || 2000
+            color: MAP_THEMES.redApex.fog.color || 0x1d0000,
+            near: MAP_THEMES.redApex.fog.near || 200,
+            far: MAP_THEMES.redApex.fog.far || 2000
         }
 
         this.scene.fog = new THREE.Fog(this.fogParams.color, this.fogParams.near, this.fogParams.far);

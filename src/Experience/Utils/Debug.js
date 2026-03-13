@@ -11,7 +11,7 @@ export default class Debug
         {
             this.ui = new Pane({
                 title: 'Experience Debug',
-                expanded: true
+                expanded: false
             })
         }
     }

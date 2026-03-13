@@ -1,16 +1,16 @@
 import * as THREE from 'three'
 import gsap from 'gsap';
 
-import redSunVertShader from '../../Shaders/RedSun/vert.glsl';
-import redSunFragShader from '../../Shaders/RedSun/frag.glsl';
+import redSunVertShader from './RedSun/vert.glsl';
+import redSunFragShader from './RedSun/frag.glsl';
 
-import mountainVertShader from '../../Shaders/Mountains/vert.glsl';
-import mountainFragShader from '../../Shaders/Mountains/frag.glsl';
+import mountainVertShader from './Mountains/vert.glsl';
+import mountainFragShader from './Mountains/frag.glsl';
 
-import pyramidVertShader from '../../Shaders/Pyramid/vert.glsl';
-import pyramidFragShader from '../../Shaders/Pyramid/frag.glsl';
+import pyramidVertShader from './Pyramid/vert.glsl';
+import pyramidFragShader from './Pyramid/frag.glsl';
 
-import { MAP_THEMES } from '../configFile'
+import { MAP_THEMES } from '../../../Utils/configFile'
 
 export default class RedApexTheme 
 {
@@ -343,6 +343,46 @@ export default class RedApexTheme
 
     this.currentAngle = (this.currentAngle || 0) + (this.pyramidParams.rotationSpeed * deltaTime * 0.01);
     this.pyramid.material.uniforms.uRotationAngle.value = this.currentAngle;
+  }
+
+  hide()
+  {
+    this.planetBackground.visible = false
+    this.pyramid.visible = false
+    this.backgroundScreen.visible = false
+  }
+
+  appear(duration = 2.0)
+  {
+    const tl = new gsap.timeline();
+
+    const fadeInTarget = (target, duration = 2.0) =>
+    {
+      if (!target) return;
+
+      tl.set(target, { visible: true }, 0);
+
+      const uniqueMaterials = new Set();
+
+      target.traverse((child) =>
+      {
+        if (child.isMesh && child.material)
+        {
+          const materials = Array.isArray(child.material) ? child.material : [child.material];
+          materials.forEach(mat => uniqueMaterials.add(mat));
+        }
+      });
+
+      uniqueMaterials.forEach(mat =>
+      {
+        mat.transparent = true;
+        tl.fromTo(mat, { opacity: 0 }, { opacity: 1, duration: duration, ease: "power2.outIn" }, 0);
+      });
+    };
+
+    fadeInTarget(this.planetBackground, duration)
+    fadeInTarget(this.backgroundScreen, duration)
+    fadeInTarget(this.pyramid, duration)
   }
 
   dispose()

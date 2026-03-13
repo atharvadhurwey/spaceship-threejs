@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
+
 import portalFragShader from '../Shaders/Portal/frag.glsl';
 import portalVertShader from '../Shaders/Portal/vert.glsl';
 
@@ -16,7 +17,6 @@ export default class Portal
     this.canExitPortal = false;
     this.isGameEnding = false;
 
-    this._handlePortalCheat = this.enter.bind(this);
     this._updateCameraProjection = () => this.camera.updateProjectionMatrix();
 
     this.init();
@@ -51,7 +51,7 @@ export default class Portal
     this.mesh.scale.set(0, 0, 0);
     this.scene.add(this.mesh);
 
-    window.addEventListener('keydown', (event) => { if (event.key === 'p') { this._handlePortalCheat() } });
+    this.experience.input.on('portalCheatPressed', () => this.enter());
 
     if (this.debug.active) 
     {
@@ -117,33 +117,23 @@ export default class Portal
       const currentThemeInst = this.experience.world.environment.currentThemeInstance;
       const isWater = this.map.activeFloor.name === 'WaterFloor';
       const isSand = this.map.activeFloor.name === 'SandFloor';
+      const isDataStream = this.map.activeFloor.name === 'DataStreamFloor';
+
+      this.mesh.material.uniforms.uColor.value.set('#000000');
+
+      if (typeof currentThemeInst.hide === 'function') { currentThemeInst.hide(); }
+
+      this.map.activeFloor.mesh.material.depthTest = false
+      if (this.map.activeFloor.mesh.material.uniforms?.uOpacity) { tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 1 }, { value: 0.0, duration: 0.5, ease: "power2.outIn" }, 0); }
+
+      if (isWater) { this.mesh.material.uniforms.uColor.value.set('#ff0000'); }
+      if (isSand) { this.mesh.material.uniforms.uColor.value.set('#0000ff'); }
+      if (isDataStream) { this.mesh.material.uniforms.uColor.value.set('#ffffff'); }
 
       if (this.isGameEnding)
       {
         this.map.activeFloor.destroy();
         this.map.clearCurrentEnvironment();
-      }
-
-      this.mesh.material.uniforms.uColor.value.set('#000000');
-
-      if (isWater || isSand)
-      {
-        currentThemeInst.planetBackground.visible = false;
-
-        if (isWater)
-        {
-          currentThemeInst.clouds.visible = false;
-          this.mesh.material.uniforms.uColor.value.set('#ff0000');
-        }
-        if (isSand)
-        {
-          currentThemeInst.backgroundScreen.visible = false;
-          currentThemeInst.pyramid.visible = false;
-          this.mesh.material.uniforms.uColor.value.set('#ffffff');
-        }
-
-        this.map.activeFloor.mesh.material.depthTest = false;
-        tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 1 }, { value: 0.0, duration: 0.5, ease: "power2.outIn" }, 0);
       }
     }
 
@@ -151,23 +141,13 @@ export default class Portal
     tl.to(this.mesh.position, { z: 100, duration: 1.0, ease: "power2.outIn" }, 0);
     tl.to(this.uniforms.uEnterProgress, { value: 1.0, duration: 2.0, ease: "power2.outIn" }, 0);
 
-    tl.to(this.camera, {
-      fov: 90, duration: 2.0, ease: "power2.outIn",
-      onUpdate: this._updateCameraProjection
-    }, 0);
+    tl.to(this.camera, { fov: 90, duration: 2.0, ease: "power2.outIn", onUpdate: this._updateCameraProjection }, 0);
     tl.to(this.uniforms.uFacOffset, { value: 0.0, duration: 0.8, ease: "power2.outIn" }, 0);
 
     if (this.isGameEnding) 
     {
       const creditsScreen = document.querySelector('.end-credits-screen');
-      if (creditsScreen) 
-      {
-        tl.fromTo(creditsScreen,
-          { opacity: 0, display: 'none' },
-          { opacity: 1, display: 'flex', duration: 2.0, ease: 'power2.inOut' },
-          1.0
-        );
-      }
+      if (creditsScreen) { tl.fromTo(creditsScreen, { opacity: 0, display: 'none' }, { opacity: 1, display: 'flex', duration: 2.0, ease: 'power2.inOut' }, 1.0); }
     }
   }
 
@@ -180,8 +160,9 @@ export default class Portal
     if (this.experience.world.audioManager) { this.experience.world.audioManager.restoreVolume(0.5) }
 
     const env = this.experience.world.environment;
-    if (env.currentTheme === 'pillar') env.switchTheme('pyramid');
-    else if (env.currentTheme === 'pyramid') env.switchTheme('eye');
+    if (env.currentTheme === 'pillarScape') env.switchTheme('redApex');
+    else if (env.currentTheme === 'redApex') env.switchTheme('dataStream');
+    else if (env.currentTheme === 'dataStream') env.switchTheme('voidEye');
 
     const tl = gsap.timeline({
       onComplete: () =>
@@ -232,14 +213,7 @@ export default class Portal
       if (isWater || isSand)
       {
         tl.fromTo(this.map.activeFloor.mesh.material.uniforms.uOpacity, { value: 0 }, { value: 1.0, duration: 0.5, ease: "power2.outIn" }, 0);
-        fadeInTarget(currentThemeInst.planetBackground, 2.0);
-
-        if (isWater) fadeInTarget(currentThemeInst.clouds, 2.0);
-        if (isSand)
-        {
-          fadeInTarget(currentThemeInst.backgroundScreen, 2.0);
-          fadeInTarget(currentThemeInst.pyramid, 2.0);
-        }
+        currentThemeInst.appear(2.0);
       }
     }
 
@@ -247,16 +221,12 @@ export default class Portal
     tl.to(this.mesh.position, { z: 0, duration: 2.0, ease: "power2.outIn" }, 0);
     tl.to(this.uniforms.uEnterProgress, { value: 0.0, duration: 2.0, ease: "power2.outIn" }, 0);
     tl.to(this.uniforms.uFacOffset, { value: -1.0, duration: 2.0, ease: "power2.outIn" }, 0);
-    tl.to(this.camera, {
-      fov: this.originalFov || 45, duration: 2.0, ease: "power2.outIn",
-      onUpdate: this._updateCameraProjection
-    }, 0);
+    tl.to(this.camera, { fov: this.originalFov || 45, duration: 2.0, ease: "power2.outIn", onUpdate: this._updateCameraProjection }, 0);
     tl.to(this.uniforms.uOpacity, { value: 0.0, duration: 2.0, ease: "power2.outIn" }, 0);
   }
 
   dispose() 
   {
-    window.removeEventListener('keydown', (event) => { if (event.key === 'p') { this._handlePortalCheat() } });
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
     this.scene.remove(this.mesh);

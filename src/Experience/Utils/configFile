@@ -1,8 +1,10 @@
+import { WaterFloor, SandFloor, VoidFloor, DataStreamFloor } from "./Floor";
+
 export const MAP_THEMES = {
-  pillar: {
+  pillarScape: {
     modelKey: 'pillarScape',
     fog: {
-      color: '#528ca8', 
+      color: '#528ca8',
       near: 0,
       far: 1000
     },
@@ -14,12 +16,18 @@ export const MAP_THEMES = {
       intensity: 0.4
     },
     directionalLight: {
-      color: '#f2f2f2', 
+      color: '#f2f2f2',
       intensity: 5,
       position: { x: 520, y: 900, z: -650 }
     },
+    floorClass: WaterFloor,
+    columns: 3,
+    isGeneratedTerrain: true,
+    terrainAreas: ['area2', 'area3'],
+    terrainColors: { top: '#ffffff', bottom: '#bec1a4', maxY: 26 },
+    timerKey: 'pillarScape'
   },
-  pyramid: {
+  redApex: {
     modelKey: 'redApex',
     fog: {
       color: '#1d0000',
@@ -38,8 +46,14 @@ export const MAP_THEMES = {
       intensity: 5,
       position: { x: 0, y: 500, z: -1450 }
     },
+    floorClass: SandFloor,
+    columns: 3,
+    isGeneratedTerrain: true,
+    terrainAreas: ['area1001', 'area1002'],
+    terrainColors: { top: '#b80000', bottom: '#727272' },
+    timerKey: 'redApex'
   },
-  eye: {
+  voidEye: {
     modelKey: 'voidEye',
     fog: {
       color: '#000000',
@@ -54,9 +68,62 @@ export const MAP_THEMES = {
       intensity: 0.3
     },
     directionalLight: {
-      color: '#161616', 
+      color: '#161616',
       intensity: 10,
       position: { x: 0, y: 500, z: -1450 }
     },
-  }
+    floorClass: VoidFloor,
+    columns: 1,
+    isGeneratedTerrain: false,
+    timerKey: 'voidEye',
+    hasAttacks: true // Flag to trigger VoidEyeAttacks
+  },
+  dataStream: {
+    modelKey: 'dataStream',
+    fog: {
+      color: '#000000',
+      near: 0,
+      far: 2000
+    },
+    background: {
+      top: '#000000',
+      bottom: '#000000'
+    },
+    env: {
+      intensity: 0.3
+    },
+    directionalLight: {
+      color: '#18005f',
+      intensity: 10,
+      position: { x: 0, y: 500, z: -1450 }
+    },
+    floorClass: DataStreamFloor,
+    columns: 1,
+    isGeneratedTerrain: false,
+    timerKey: 'dataStream'
+  },
+  hush: {
+    modelKey: 'hush',
+    fog: {
+      color: '#ff0000',
+      near: 0,
+      far: 700
+    },
+    background: {
+      top: '#000000',
+      bottom: '#000000'
+    },
+    env: {
+      intensity: 0.3
+    },
+    directionalLight: {
+      color: '#ffffff',
+      intensity: 10,
+      position: { x: 0, y: 500, z: -1450 }
+    },
+    floorClass: DataStreamFloor,
+    columns: 3, // Defaults to 3 since it was commented out in your original code
+    isGeneratedTerrain: false,
+    timerKey: 'hush'
+  },
 };

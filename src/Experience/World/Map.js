@@ -4,10 +4,10 @@ import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-
 import Experience from '../Experience';
 
 import TerrainGenerator from '../Utils/TerrainGenerator';
-import { WaterFloor, SandFloor, VoidFloor } from '../Utils/Floor';
 import Portal from './Portal';
 import VoidEyeAttacks from '../Utils/VoidEyeAttacks';
 
+import { MAP_THEMES } from '../Utils/configFile';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -54,58 +54,57 @@ export default class Map
     {
         this.clearCurrentEnvironment();
 
-        this.noOfColumns = 3;
+        const config = MAP_THEMES[theme.modelKey];
 
-        if (theme.modelKey === 'pillarScape')
+        if (!config)
         {
-            const terrainData = TerrainGenerator.build(
-                this.resources.items.pillarScapeModel.scene,
-                ['area2', 'area3'],
-                { top: '#ffffff', bottom: '#bec1a4', maxY: 26 },
-                this.debugFolder
-            );
-            this._applyTerrainData(terrainData);
-            this.activeFloor = new WaterFloor(this.scene, this.debug, this.resources, this.chunkWidth, this.chunkLength);
-            this.experience.world.levelManager.setTimerForMap('pillarScape');
+            console.warn(`Theme configuration for "${theme.modelKey}" not found!`);
+            return;
         }
-        else if (theme.modelKey === 'redApex')
+
+        this.noOfColumns = config.columns;
+
+        if (config.isGeneratedTerrain)
         {
+            const modelScene = this.resources.items[`${theme.modelKey}Model`].scene;
             const terrainData = TerrainGenerator.build(
-                this.resources.items.redApexModel.scene,
-                ['area1001', 'area1002'],
-                { top: '#b80000', bottom: '#727272' },
+                modelScene,
+                config.terrainAreas,
+                config.terrainColors,
                 this.debugFolder
             );
             this._applyTerrainData(terrainData);
-            this.activeFloor = new SandFloor(this.scene, this.debug, this.chunkWidth);
-            this.experience.world.levelManager.setTimerForMap('redApex');
-        } else if (theme.modelKey === 'voidEye')
+        } else
         {
             const tempGeo = new THREE.PlaneGeometry(1, 1, 1, 1);
-            const tempMat = new THREE.MeshStandardMaterial({
-                color: 0x222222,
-                roughness: 0.2
-            });
-
+            const tempMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2 });
             const tempMesh = new THREE.Mesh(tempGeo, tempMat);
             tempMesh.position.set(0, 0, 0);
             tempMesh.rotation.x = -Math.PI / 2;
             tempMesh.visible = false;
 
-            const newTerrainData = {
+            this._applyTerrainData({
                 areaTemplates: [tempMesh],
                 chunkLength: 1382.854263305664,
                 chunkWidth: 364.219970703125,
                 debugFolder: this.debugFolder
-            };
-
-            this._applyTerrainData(newTerrainData);
-            this.noOfColumns = 1
-            this.activeFloor = new VoidFloor(this.scene, this.debug, this.resources, this.chunkWidth, this.chunkLength);
-            this.voidEyeAttacks = new VoidEyeAttacks(this.scene, this.chunkWidth, this.chunkLength);
-            this.experience.world.levelManager.setTimerForMap('voidEye');
+            });
         }
 
+        this.activeFloor = new config.floorClass(
+            this.scene,
+            this.debug,
+            this.resources,
+            this.chunkWidth,
+            this.chunkLength
+        );
+
+        if (config.hasAttacks)
+        {
+            this.voidEyeAttacks = new VoidEyeAttacks(this.scene, this.chunkWidth, this.chunkLength);
+        }
+
+        this.experience.world.levelManager.setTimerForMap(config.timerKey);
         this.reset();
     }
 
@@ -169,6 +168,10 @@ export default class Map
         {
             this.activeFloor.reset();
             this.voidEyeAttacks.reset();
+        }
+        if (this.experience.world.environment?.currentThemeInstance.name === 'dataStreamTheme')
+        {
+            this.experience.world.environment.currentThemeInstance.reset();
         }
         if (this.experience.world.levelManager) this.experience.world.levelManager.reset();
         this.chunks = [];
@@ -304,6 +307,17 @@ export default class Map
                 return true;
             }
         }
+
+        if (this.experience.world.environment.currentThemeInstance.name === 'dataStreamTheme')
+        {
+            const collisionPoint = this.experience.world.environment.currentThemeInstance.checkCollisions(shipCollider);
+            if (collisionPoint)
+            {
+                this.collisionPoint = collisionPoint;
+                return true;
+            }
+        }
+
 
         for (const chunk of this.chunks)
         {

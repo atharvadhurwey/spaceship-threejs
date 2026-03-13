@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import Experience from "../Experience";
 
 export default class Movement
@@ -16,34 +17,47 @@ export default class Movement
 
         this.isEnabled = false;
 
+        this.keyMap = {
+            left: ['ArrowLeft', 'KeyA'],
+            right: ['ArrowRight', 'KeyD']
+        };
+
+        this._handleKeyDown = (e) => this.handleKey(e.code, true);
+        this._handleKeyUp = (e) => this.handleKey(e.code, false);
+
         this.initEventListeners();
     }
 
     initEventListeners()
     {
         this.isEnabled = true;
-        window.addEventListener('keydown', (e) => this.handleKey(e.code, true));
-        window.addEventListener('keyup', (e) => this.handleKey(e.code, false));
+        window.addEventListener('keydown', this._handleKeyDown);
+        window.addEventListener('keyup', this._handleKeyUp);
     }
+
+
 
     handleKey(code, isPressed)
     {
-        if (this.isEnabled === false) return;
-        if (code === 'ArrowLeft' || code === 'KeyA') this.input.left = isPressed;
-        if (code === 'ArrowRight' || code === 'KeyD') this.input.right = isPressed;
+        if (!this.isEnabled) return;
+
+        if (this.keyMap.left.includes(code)) this.input.left = isPressed;
+        if (this.keyMap.right.includes(code)) this.input.right = isPressed;
     }
 
     update()
     {
-        const deltaTime = this.experience.time.delta;
+        if (!this.isEnabled) return;
 
+        const deltaTime = this.experience.time.delta;
         let targetVelocity = 0;
+
         if (this.input.left) targetVelocity = -this.maxSpeed;
         if (this.input.right) targetVelocity = this.maxSpeed;
 
         if (targetVelocity !== 0)
         {
-            this.velocity += (targetVelocity - this.velocity) * this.turnSpeed * deltaTime;
+            this.velocity = THREE.MathUtils.lerp(this.velocity, targetVelocity, this.turnSpeed * deltaTime);
         } else
         {
             this.velocity *= Math.pow(this.friction, deltaTime);
@@ -66,5 +80,11 @@ export default class Movement
         this.velocity = 0;
         this.input = { left: false, right: false };
         this.forwardSpeed = 2;
+    }
+
+    dispose()
+    {
+        window.removeEventListener('keydown', this._handleKeyDown);
+        window.removeEventListener('keyup', this._handleKeyUp);
     }
 }

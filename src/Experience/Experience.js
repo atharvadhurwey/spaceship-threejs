@@ -9,6 +9,8 @@ import World from './World/World.js'
 import Resources from './Resources.js'
 import Movement from './Utils/Movement.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
+import InputManager from './Utils/InputManager.js'
+import UIManager from './Utils/UIManager.js'
 
 let instance = null
 
@@ -32,6 +34,8 @@ export default class Experience
         this.camera = new Camera()
         this.renderer = new Renderer()
         this.movement = new Movement()
+        this.ui = new UIManager()
+        this.input = new InputManager()
         this.world = new World()
 
         if (this.debug.active) 

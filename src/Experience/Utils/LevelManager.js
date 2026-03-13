@@ -9,8 +9,10 @@ export default class LevelManager
 
     this.survivalTimes = {
       'pillarScape': 1500,
-      'redApex': 3000,
-      'voidEye': 4500
+      'redApex': 2000,
+      'dataStream': 2500,
+      'hush': 2500,
+      'voidEye': 4500,
     }
 
     this.currentMapName = 'pillarScape';
@@ -39,6 +41,9 @@ export default class LevelManager
     } else if (mapName == 'voidEye')
     {
       this.targetSurvivalTime = this.survivalTimes['voidEye'];
+    } else if (mapName == 'dataStream')
+    {
+      this.targetSurvivalTime = this.survivalTimes['dataStream'];
     }
   }
 
@@ -69,7 +74,7 @@ export default class LevelManager
 
     const currentDisplayTime = Math.ceil(remainingTime / 100);
 
-    if (this.currentMapName === 'redApex' && currentDisplayTime === 25 && !this.hasFiredRedApexEvent) 
+    if (this.currentMapName === 'redApex' && currentDisplayTime === 10 && !this.hasFiredRedApexEvent) 
     {
       this.redApexEvent();
       this.hasFiredRedApexEvent = true;
