@@ -74,6 +74,7 @@ export default class Map
                 this.debugFolder
             );
             this._applyTerrainData(terrainData);
+
         } else
         {
             const tempGeo = new THREE.PlaneGeometry(1, 1, 1, 1);
@@ -102,6 +103,11 @@ export default class Map
         if (config.hasAttacks)
         {
             this.voidEyeAttacks = new VoidEyeAttacks(this.scene, this.chunkWidth, this.chunkLength);
+        }
+
+        if (this.experience.world.ship.particlesTrail)
+        {
+            this.experience.world.ship.particlesTrail.toggleEmission(config.isEmitting);
         }
 
         this.experience.world.levelManager.setTimerForMap(config.timerKey);
@@ -164,16 +170,20 @@ export default class Map
     reset()
     {
         for (const chunk of this.chunks) this.scene.remove(chunk);
+
         if (this.voidEyeAttacks)
         {
             this.activeFloor.reset();
             this.voidEyeAttacks.reset();
         }
-        if (this.experience.world.environment?.currentThemeInstance.name === 'dataStreamTheme')
+
+        if (this.experience.world.environment?.currentThemeInstance.name === 'dataStreamTheme' || this.experience.world.environment?.currentThemeInstance.name === 'hushTheme')
         {
             this.experience.world.environment.currentThemeInstance.reset();
         }
+
         if (this.experience.world.levelManager) this.experience.world.levelManager.reset();
+
         this.chunks = [];
         this._shipColliderCache = null;
         this.createInfiniteMap();
@@ -310,6 +320,17 @@ export default class Map
 
         if (this.experience.world.environment.currentThemeInstance.name === 'dataStreamTheme')
         {
+            const collisionPoint = this.experience.world.environment.currentThemeInstance.checkCollisions(shipCollider);
+            if (collisionPoint)
+            {
+                this.collisionPoint = collisionPoint;
+                return true;
+            }
+        }
+
+        if (this.experience.world.environment.currentThemeInstance.name === 'hushTheme')
+        {
+
             const collisionPoint = this.experience.world.environment.currentThemeInstance.checkCollisions(shipCollider);
             if (collisionPoint)
             {

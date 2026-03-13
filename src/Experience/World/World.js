@@ -40,6 +40,7 @@ export default class World
             this.isStarted = true;
             if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.resume(); }
             if (this.environment.currentThemeInstance.name == 'dataStreamTheme') { this.environment.currentThemeInstance.resume(); }
+            if (this.environment.currentThemeInstance.name == 'hushTheme') { this.environment.currentThemeInstance.resume(); }
         });
 
         this.experience.ui.on('volumeChanged', (value) =>
@@ -56,6 +57,7 @@ export default class World
                 this.isStarted = false;
                 if (this.map.voidEyeAttacks) { this.map.voidEyeAttacks.pause(); }
                 if (this.environment.currentThemeInstance.name == 'dataStreamTheme') { this.environment.currentThemeInstance.pause(); }
+                if (this.environment.currentThemeInstance.name == 'hushTheme') { this.environment.currentThemeInstance.pause(); }
             }
         });
     }

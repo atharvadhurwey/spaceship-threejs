@@ -1,4 +1,4 @@
-import { WaterFloor, SandFloor, VoidFloor, DataStreamFloor } from "./Floor";
+import { WaterFloor, SandFloor, VoidFloor, DataStreamFloor, HushFloor } from "./Floor";
 
 export const MAP_THEMES = {
   pillarScape: {
@@ -22,6 +22,7 @@ export const MAP_THEMES = {
     },
     floorClass: WaterFloor,
     columns: 3,
+    isEmitting: true,
     isGeneratedTerrain: true,
     terrainAreas: ['area2', 'area3'],
     terrainColors: { top: '#ffffff', bottom: '#bec1a4', maxY: 26 },
@@ -48,6 +49,7 @@ export const MAP_THEMES = {
     },
     floorClass: SandFloor,
     columns: 3,
+    isEmitting: true,
     isGeneratedTerrain: true,
     terrainAreas: ['area1001', 'area1002'],
     terrainColors: { top: '#b80000', bottom: '#727272' },
@@ -74,6 +76,7 @@ export const MAP_THEMES = {
     },
     floorClass: VoidFloor,
     columns: 1,
+    isEmitting: false,
     isGeneratedTerrain: false,
     timerKey: 'voidEye',
     hasAttacks: true // Flag to trigger VoidEyeAttacks
@@ -99,6 +102,7 @@ export const MAP_THEMES = {
     },
     floorClass: DataStreamFloor,
     columns: 1,
+    isEmitting: false,
     isGeneratedTerrain: false,
     timerKey: 'dataStream'
   },
@@ -117,12 +121,13 @@ export const MAP_THEMES = {
       intensity: 0.3
     },
     directionalLight: {
-      color: '#ffffff',
+      color: '#ff0000',
       intensity: 10,
       position: { x: 0, y: 500, z: -1450 }
     },
-    floorClass: DataStreamFloor,
-    columns: 3, // Defaults to 3 since it was commented out in your original code
+    floorClass: HushFloor,
+    columns: 3,
+    isEmitting: false,
     isGeneratedTerrain: false,
     timerKey: 'hush'
   },

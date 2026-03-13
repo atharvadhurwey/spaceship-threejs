@@ -9,6 +9,7 @@ export default class ParticlesTrail
     this.leftOffset = leftOffset;
     this.rightOffset = rightOffset;
 
+    this.isEmitting = true;
     this.spawnRate = 8;
     this.lifeTime = lifeTime;
     this.maxRadius = maxRadius;
@@ -79,6 +80,15 @@ export default class ParticlesTrail
     this.scene.add(this.particles);
   }
 
+  toggleEmission(state) 
+  {
+    if (state !== undefined) {
+      this.isEmitting = state;
+    } else {
+      this.isEmitting = !this.isEmitting;
+    }
+  }
+
   getEmissionPosition(localOffset) 
   {
     const worldPos = localOffset.clone();
@@ -120,7 +130,7 @@ export default class ParticlesTrail
       activeOffset = this.rightOffset;
     }
 
-    if (activeOffset !== null)
+    if (activeOffset !== null && this.isEmitting)
     {
       const currentPos = this.getEmissionPosition(activeOffset);
 
